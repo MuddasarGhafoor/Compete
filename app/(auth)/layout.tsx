@@ -1,51 +1,40 @@
 import Link from "next/link";
-import { ArrowLeft, CalendarCheck, Flame, Trophy } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { TodayPreview } from "@/components/marketing-previews";
 
-const points = [
-  { icon: CalendarCheck, text: "Plan the habits you want to build" },
-  { icon: Flame, text: "Check in daily and grow your streaks" },
-  { icon: Trophy, text: "Compete with friends every week" },
-];
+// Both columns use the same 64px top bar and lg:px-8 side padding as the site header.
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-dvh flex-1 lg:grid-cols-2">
-      {/* Left: compact brand panel (desktop only) */}
-      <aside className="relative hidden overflow-hidden bg-linear-to-br from-emerald-600 via-emerald-700 to-emerald-900 text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:justify-between lg:p-10 xl:p-12">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgb(255_255_255/0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.06)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_70%)]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-24 -bottom-24 size-96 rounded-full bg-emerald-400/20 blur-3xl"
-        />
-
-        <Logo tone="light" className="relative self-start" />
-
-        <div className="relative max-w-sm space-y-6">
-          <h2 className="text-3xl leading-tight font-semibold tracking-tight text-balance">
-            Turn your daily routine into a friendly competition.
-          </h2>
-          <ul className="space-y-3">
-            {points.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-3 text-sm text-emerald-50">
-                <span className="grid size-7 shrink-0 place-items-center rounded-md bg-white/10 ring-1 ring-white/15">
-                  <Icon className="size-4" />
-                </span>
-                {text}
-              </li>
-            ))}
-          </ul>
+      {/* Left: brand panel (desktop only) */}
+      <aside className="hidden border-r bg-secondary lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col">
+        <div className="flex h-16 shrink-0 items-center px-8">
+          <Logo />
         </div>
 
-        <p className="relative text-sm text-emerald-100/70">Build better habits, together.</p>
+        <div className="flex flex-1 flex-col justify-center gap-10 px-8 xl:px-16">
+          <div className="max-w-md">
+            <h2 className="font-display text-4xl leading-tight font-medium tracking-tight text-balance">
+              A little friendly competition goes a long way.
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Track your habits, keep your streak, and see how you stack up against friends each
+              week.
+            </p>
+          </div>
+          <TodayPreview compact className="max-w-sm" />
+        </div>
+
+        <p className="shrink-0 px-8 pb-8 text-sm text-muted-foreground">
+          Build better habits, together.
+        </p>
       </aside>
 
       {/* Right: the form */}
-      <main className="flex flex-col bg-background px-6 py-6 sm:px-10">
-        <div className="flex items-center justify-between lg:justify-end">
+      <main className="flex flex-col">
+        <div className="flex h-16 shrink-0 items-center justify-between px-4 sm:px-6 lg:justify-end lg:px-8">
           <Logo className="lg:hidden" />
           <Link
             href="/"
@@ -55,7 +44,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             Home
           </Link>
         </div>
-        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 py-10">
+        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-10 sm:px-0">
           {children}
         </div>
       </main>

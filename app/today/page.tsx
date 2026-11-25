@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Flame, ListPlus, Target, Trophy, type LucideIcon } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
+import { Container } from "@/components/container";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireUser } from "@/lib/session";
 
@@ -13,11 +14,13 @@ export default function TodayPage() {
   return (
     <>
       <AppHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
-        {/* Reads the session, so it streams in behind a Suspense boundary. */}
-        <Suspense fallback={<TodaySkeleton />}>
-          <TodayContent />
-        </Suspense>
+      <main className="flex-1">
+        <Container className="py-10 sm:py-12">
+          {/* Reads the session, so it streams in behind a Suspense boundary. */}
+          <Suspense fallback={<TodaySkeleton />}>
+            <TodayContent />
+          </Suspense>
+        </Container>
       </main>
     </>
   );

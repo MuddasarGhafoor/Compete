@@ -1,19 +1,19 @@
 import { cookies } from "next/headers";
-import type { NextRequest } from "next/server";
+import type { NextRequest, NextResponse } from "next/server";
 
 /**
  * DEV LOGIN (development only)
  *
- * Visit /dev-login and click "Continue as Dev User" to use the app without a real account.
- * Works only when `DEV_LOGIN="true"` is in .env AND the app runs with `pnpm run dev`.
- * Production builds (`next build` / `next start`) always ignore it.
+ * A wrench icon in the navbar opens /dev-login, which signs you in as a fake "Dev User"
+ * and goes straight to the Today page. Works only when `DEV_LOGIN="true"` is in .env AND
+ * the app runs with `pnpm run dev`. Production builds always ignore it.
  *
  * The dev user is not saved in the database, so it is for viewing pages, not saving data.
  *
  * To remove dev login completely:
- *   1. Delete this file and the `app/(auth)/dev-login/` folder.
+ *   1. Delete this file, `app/dev-login/route.ts` and `components/dev-login-button.tsx`.
  *   2. Remove the lines marked `dev-login` in: lib/session.ts, proxy.ts,
- *      app/actions/auth.ts, app/(auth)/sign-in/page.tsx, app/(auth)/sign-up/page.tsx.
+ *      app/actions/auth.ts and components/site-header.tsx.
  *   3. Remove DEV_LOGIN from .env and .env.example.
  */
 export const isDevLoginEnabled =
@@ -40,10 +40,9 @@ export function hasDevLoginCookie(request: NextRequest) {
   return isDevLoginEnabled && request.cookies.has(DEV_LOGIN_COOKIE);
 }
 
-export async function startDevLogin() {
-  if (!isDevLoginEnabled) throw new Error("Dev login is disabled.");
-  const cookieStore = await cookies();
-  cookieStore.set(DEV_LOGIN_COOKIE, "1", {
+/** Marks the visitor as signed in as the Dev User. */
+export function setDevLoginCookie(response: NextResponse) {
+  response.cookies.set(DEV_LOGIN_COOKIE, "1", {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
@@ -51,6 +50,7 @@ export async function startDevLogin() {
   });
 }
 
+/** Called on sign out. */
 export async function endDevLogin() {
   if (!isDevLoginEnabled) return;
   const cookieStore = await cookies();

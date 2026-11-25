@@ -46,7 +46,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   return (
     <div className="w-full">
       <div className="space-y-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight">{text.title}</h1>
+        <h1 className="font-display text-3xl font-medium tracking-tight">{text.title}</h1>
         <p className="text-sm text-muted-foreground">{text.subtitle}</p>
       </div>
 
