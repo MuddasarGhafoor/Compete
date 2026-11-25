@@ -79,6 +79,12 @@ export async function signIn(
 }
 
 export async function signOut() {
-  await auth.api.signOut({ headers: await headers() });
+  const requestHeaders = await headers();
+  try {
+    await auth.api.signOut({ headers: requestHeaders });
+  } catch (error) {
+    // Nothing to sign out of (e.g. the dev bypass user); just leave.
+    console.warn("Sign out skipped:", error);
+  }
   redirect("/sign-in");
 }

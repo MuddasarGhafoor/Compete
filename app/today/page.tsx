@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { signOut } from "@/app/actions/auth";
-import { Logo } from "@/components/logo";
+import { Flame, ListPlus, Target, Trophy, type LucideIcon } from "lucide-react";
+import { AppHeader } from "@/components/app-header";
+import { Card, CardContent } from "@/components/ui/card";
 import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -10,58 +11,93 @@ export const metadata: Metadata = {
 
 export default function TodayPage() {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-10">
-      <Logo />
-
-      {/* Reads the session, so it streams in behind a Suspense boundary. */}
-      <Suspense fallback={<TodaySkeleton />}>
-        <TodayContent />
-      </Suspense>
-    </main>
+    <>
+      <AppHeader />
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        {/* Reads the session, so it streams in behind a Suspense boundary. */}
+        <Suspense fallback={<TodaySkeleton />}>
+          <TodayContent />
+        </Suspense>
+      </main>
+    </>
   );
 }
 
 async function TodayContent() {
   const user = await requireUser();
+  const firstName = user.name.split(" ")[0];
 
   return (
-    <>
-      <header className="mt-8 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-zinc-500">Welcome back</p>
-          <h1 className="text-2xl font-bold tracking-tight">{user.name}</h1>
-        </div>
-        <form action={signOut}>
-          <button
-            type="submit"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
-          >
-            Sign out
-          </button>
-        </form>
-      </header>
+    <div className="space-y-8">
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-muted-foreground">Today</p>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          Welcome back, {firstName}
+        </h1>
+      </div>
 
-      <section className="mt-8 rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-        <p className="text-3xl" aria-hidden>
-          🌱
-        </p>
-        <p className="mt-3 font-semibold">No habits yet</p>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Adding habits is the next feature we&apos;ll build.
-        </p>
-      </section>
-    </>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard icon={Target} label="Today's progress" value="0%" hint="No habits scheduled yet" />
+        <StatCard icon={Flame} label="Current streak" value="0 days" hint="Finish a day to start one" />
+        <StatCard icon={Trophy} label="This week" value="—" hint="Leaderboard arrives in Phase 2" />
+      </div>
+
+      <Card>
+        <CardContent className="flex flex-col items-center px-6 py-12 text-center">
+          <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary">
+            <ListPlus className="size-6" />
+          </span>
+          <h2 className="mt-4 text-lg font-semibold">No habits yet</h2>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            Habits are the next feature we&apos;re building. Once they&apos;re in, your daily
+            routine shows up here, ready to check off.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <Card size="sm">
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-muted-foreground">{label}</p>
+          <Icon className="size-4 text-muted-foreground" />
+        </div>
+        <div>
+          <p className="text-2xl font-semibold tracking-tight tabular-nums">{value}</p>
+          <p className="text-xs text-muted-foreground">{hint}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
 function TodaySkeleton() {
   return (
-    <div className="mt-8 animate-pulse space-y-8" aria-hidden>
+    <div className="animate-pulse space-y-8" aria-hidden>
       <div className="space-y-2">
-        <div className="h-4 w-24 rounded bg-zinc-200 dark:bg-zinc-800" />
-        <div className="h-7 w-40 rounded bg-zinc-200 dark:bg-zinc-800" />
+        <div className="h-4 w-16 rounded bg-muted" />
+        <div className="h-8 w-64 rounded bg-muted" />
       </div>
-      <div className="h-40 rounded-2xl bg-zinc-200 dark:bg-zinc-800" />
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[0, 1, 2].map((key) => (
+          <div key={key} className="h-28 rounded-xl bg-muted" />
+        ))}
+      </div>
+      <div className="h-56 rounded-xl bg-muted" />
     </div>
   );
 }

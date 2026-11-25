@@ -1,8 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { CircleAlert, Eye, EyeOff, Loader2 } from "lucide-react";
 import { signIn, signUp, type AuthFormState } from "@/app/actions/auth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type AuthFormProps = {
   mode: "sign-in" | "sign-up";
@@ -29,88 +34,96 @@ const copy = {
   },
 } as const;
 
-const inputClass =
-  "w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 dark:border-zinc-700 dark:bg-zinc-900";
-
 export function AuthForm({ mode }: AuthFormProps) {
   const text = copy[mode];
+  const isSignUp = mode === "sign-up";
+  const [showPassword, setShowPassword] = useState(false);
   const [state, formAction, pending] = useActionState<AuthFormState, FormData>(
-    mode === "sign-in" ? signIn : signUp,
+    isSignUp ? signUp : signIn,
     {},
   );
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-bold tracking-tight">{text.title}</h1>
-      <p className="mt-1 text-zinc-600 dark:text-zinc-400">{text.subtitle}</p>
+      <div className="space-y-1.5">
+        <h1 className="text-2xl font-semibold tracking-tight">{text.title}</h1>
+        <p className="text-sm text-muted-foreground">{text.subtitle}</p>
+      </div>
 
-      <form action={formAction} className="mt-8 space-y-4">
-        {mode === "sign-up" && (
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">Name</span>
-            <input
+      <form action={formAction} className="mt-8 space-y-5">
+        {isSignUp && (
+          <div className="space-y-2">
+            <Label htmlFor="name">Full name</Label>
+            <Input
+              id="name"
               name="name"
               type="text"
               autoComplete="name"
+              placeholder="Your name"
               required
               minLength={2}
               defaultValue={state.fields?.name}
-              className={inputClass}
+              className="h-10"
             />
-          </label>
+          </div>
         )}
 
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium">Email</span>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
             name="email"
             type="email"
             autoComplete="email"
+            placeholder="you@example.com"
             required
             defaultValue={state.fields?.email}
-            className={inputClass}
+            className="h-10"
           />
-        </label>
+        </div>
 
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium">Password</span>
-          <input
-            name="password"
-            type="password"
-            autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
-            required
-            minLength={8}
-            className={inputClass}
-          />
-          {mode === "sign-up" && (
-            <span className="block text-xs text-zinc-500">At least 8 characters.</span>
-          )}
-        </label>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+              placeholder={isSignUp ? "At least 8 characters" : "Your password"}
+              required
+              minLength={8}
+              className="h-10 pr-10"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setShowPassword((value) => !value)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute top-1/2 right-1.5 -translate-y-1/2 text-muted-foreground"
+            >
+              {showPassword ? <EyeOff /> : <Eye />}
+            </Button>
+          </div>
+        </div>
 
         {state.error && (
-          <p
-            role="alert"
-            className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300"
-          >
-            {state.error}
-          </p>
+          <Alert variant="destructive">
+            <CircleAlert />
+            <AlertDescription>{state.error}</AlertDescription>
+          </Alert>
         )}
 
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <Button type="submit" size="lg" disabled={pending} className="h-10 w-full">
+          {pending && <Loader2 className="animate-spin" data-icon="inline-start" />}
           {pending ? text.pending : text.submit}
-        </button>
+        </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         {text.switchText}{" "}
-        <Link
-          href={text.switchHref}
-          className="font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
-        >
+        <Link href={text.switchHref} className="font-medium text-primary hover:underline">
           {text.switchLink}
         </Link>
       </p>
