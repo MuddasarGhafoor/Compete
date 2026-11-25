@@ -3,13 +3,14 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireUser, type CurrentUser } from "@/lib/session";
-import { dayIn, fromDbDate, safeTimeZone, toDbDate, type DateStr } from "@/lib/dates";
+import { addDays, dayIn, safeTimeZone, type DateStr } from "@/lib/dates";
 import type { CheckInLite, HabitLite } from "@/lib/stats";
 
 /*
  * Performance notes: every page loads its data in ONE parallel wave of small queries.
- * Select only the columns that are used (results travel over the network, and on a slow or
- * distant link every extra kilobyte costs time). Avoid queries that wait on other queries.
+ * Select only the columns that are used, and keep results small: a result of more than about
+ * 14 KB needs extra network round trips (TCP slow start), so check-ins are loaded packed, one
+ * row per habit (see PackedCheckIns). Avoid queries that wait on other queries.
  */
 
 /** The signed-in user plus their timezone and today's date in it. */
@@ -39,7 +40,18 @@ export type HabitRow = {
   archivedAt: Date | null;
 };
 
-export type CheckInRow = { habitId: string; date: Date; value: number };
+/**
+ * One habit's check-ins since `from`, packed into arrays (one row per habit instead of one per
+ * check-in, about 5x smaller): `d` = days after `from` (0 = `from`), `v` = values, same order.
+ * Select it with `array_agg(date - <from>::date order by date) as d, array_agg(value order by date) as v`.
+ */
+export type PackedCheckIns = { habitId: string; d: number[]; v: number[] };
+
+export function unpackCheckIns(rows: PackedCheckIns[], from: DateStr): CheckInLite[] {
+  return rows.flatMap((row) =>
+    row.d.map((offset, index) => ({ habitId: row.habitId, date: addDays(from, offset), value: row.v[index] })),
+  );
+}
 
 /** The habit columns the app needs. */
 export const habitColumns = {
@@ -70,29 +82,23 @@ export function toHabitLite(row: HabitRow, tz: string): HabitLite {
 
 export type ActivityData = { habits: HabitLite[]; checkIns: CheckInLite[] };
 
-export function toActivity(habits: HabitRow[], checkIns: CheckInRow[], tz: string): ActivityData {
-  return {
-    habits: habits.map((habit) => toHabitLite(habit, tz)),
-    checkIns: checkIns.map((checkIn) => ({
-      habitId: checkIn.habitId,
-      date: fromDbDate(checkIn.date),
-      value: checkIn.value,
-    })),
-  };
+export function toActivity(habits: HabitRow[], checkIns: CheckInLite[], tz: string): ActivityData {
+  return { habits: habits.map((habit) => toHabitLite(habit, tz)), checkIns };
 }
 
 /** One user's habits and check-ins from `from` onward (two small queries in parallel). */
 export async function loadUserActivity(userId: string, tz: string, from: DateStr): Promise<ActivityData> {
-  const [habits, checkIns] = await Promise.all([
+  const [habits, packed] = await Promise.all([
     prisma.habit.findMany({
       where: { userId },
       select: habitColumns,
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     }),
-    prisma.checkIn.findMany({
-      where: { userId, date: { gte: toDbDate(from) } },
-      select: { habitId: true, date: true, value: true },
-    }),
+    prisma.$queryRaw<PackedCheckIns[]>`
+      select "habitId", array_agg(date - ${from}::date order by date) as d, array_agg(value order by date) as v
+      from check_in
+      where "userId" = ${userId} and date >= ${from}::date
+      group by "habitId"`,
   ]);
-  return toActivity(habits, checkIns, tz);
+  return toActivity(habits, unpackCheckIns(packed, from), tz);
 }

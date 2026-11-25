@@ -12,8 +12,8 @@ function createPrismaClient() {
   );
   const adapter = new PrismaPg({
     connectionString,
-    // Opening a connection costs several round trips (TLS + auth), which is slow when the
-    // database is far away. Keep idle connections for 10 minutes instead of pg's 10 seconds.
+    // Opening a connection costs several round trips (TLS + auth), which adds up even with the
+    // database in Singapore. Keep idle connections for 10 minutes instead of pg's 10 seconds.
     idleTimeoutMillis: 10 * 60 * 1000,
     keepAlive: true,
     max: 10,
@@ -22,16 +22,19 @@ function createPrismaClient() {
 }
 
 // Reuse one client during development so hot reloads don't open new connections.
-// After `prisma generate` the PrismaClient class changes, so a stale cached client is replaced
-// automatically (no dev server restart needed after schema changes).
+// A stale cached client is replaced automatically (no dev server restart needed) after
+// `prisma generate` (the PrismaClient class changes) or when DATABASE_URL in .env changes.
 const globalForPrisma = globalThis as unknown as {
-  prismaCache?: { client: ReturnType<typeof createPrismaClient>; ctor: typeof PrismaClient };
+  prismaCache?: { client: ReturnType<typeof createPrismaClient>; ctor: typeof PrismaClient; url?: string };
 };
 
 const cached = globalForPrisma.prismaCache;
-export const prisma = cached && cached.ctor === PrismaClient ? cached.client : createPrismaClient();
+export const prisma =
+  cached && cached.ctor === PrismaClient && cached.url === process.env.DATABASE_URL
+    ? cached.client
+    : createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   if (cached && cached.client !== prisma) void cached.client.$disconnect().catch(() => {});
-  globalForPrisma.prismaCache = { client: prisma, ctor: PrismaClient };
+  globalForPrisma.prismaCache = { client: prisma, ctor: PrismaClient, url: process.env.DATABASE_URL };
 }

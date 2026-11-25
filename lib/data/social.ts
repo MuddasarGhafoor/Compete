@@ -1,8 +1,8 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { addDays, dayIn, dayRange, fromDbDate, safeTimeZone, toDbDate, type DateStr } from "@/lib/dates";
+import { addDays, dayIn, dayRange, safeTimeZone, type DateStr } from "@/lib/dates";
 import { currentStreak, dailyStats, indexCheckIns, weekScore } from "@/lib/stats";
-import { toActivity, type ActivityData, type HabitRow, type Viewer } from "./core";
+import { toActivity, unpackCheckIns, type ActivityData, type HabitRow, type PackedCheckIns, type Viewer } from "./core";
 
 export type PersonRef = {
   id: string;
@@ -40,7 +40,11 @@ type FriendshipRow = {
   timezone: string | null;
 };
 type FriendHabitRow = HabitRow & { userId: string };
-type FriendCheckInRow = { userId: string; habitId: string; date: Date; value: number; updatedAt: Date };
+type FriendCheckIns = PackedCheckIns & {
+  userId: string;
+  /** When each check-in last changed (ms since 1970), only for the feed's last days; else null */
+  u: (number | null)[];
+};
 
 /**
  * Friends (with their habits and check-ins since `from`), pending requests and the friends'
@@ -49,6 +53,7 @@ type FriendCheckInRow = { userId: string; habitId: string; date: Date; value: nu
  */
 export async function getSocial(viewer: Viewer, from: DateStr) {
   const me = viewer.id;
+  const feedFrom = addDays(viewer.today, -2);
   const [links, habits, checkIns] = await Promise.all([
     prisma.$queryRaw<FriendshipRow[]>`
       select f.id, f.status, f."requesterId", f."createdAt",
@@ -64,17 +69,21 @@ export async function getSocial(viewer: Viewer, from: DateStr) {
         select case when "requesterId" = ${me} then "addresseeId" else "requesterId" end
         from friendship where status = 'ACCEPTED' and ${me} in ("requesterId", "addresseeId"))
       order by "sortOrder", "createdAt"`,
-    prisma.$queryRaw<FriendCheckInRow[]>`
-      select "userId", "habitId", date, value, "updatedAt"
+    prisma.$queryRaw<FriendCheckIns[]>`
+      select "userId", "habitId",
+        array_agg(date - ${from}::date order by date) as d,
+        array_agg(value order by date) as v,
+        array_agg(case when date >= ${feedFrom}::date then (extract(epoch from "updatedAt") * 1000)::float8 end order by date) as u
       from check_in
-      where date >= ${toDbDate(from)} and "userId" in (
+      where date >= ${from}::date and "userId" in (
         select case when "requesterId" = ${me} then "addresseeId" else "requesterId" end
-        from friendship where status = 'ACCEPTED' and ${me} in ("requesterId", "addresseeId"))`,
+        from friendship where status = 'ACCEPTED' and ${me} in ("requesterId", "addresseeId"))
+      group by "userId", "habitId"`,
   ]);
 
   const habitsByUser = new Map<string, FriendHabitRow[]>();
   for (const habit of habits) habitsByUser.set(habit.userId, [...(habitsByUser.get(habit.userId) ?? []), habit]);
-  const checkInsByUser = new Map<string, FriendCheckInRow[]>();
+  const checkInsByUser = new Map<string, FriendCheckIns[]>();
   for (const row of checkIns) checkInsByUser.set(row.userId, [...(checkInsByUser.get(row.userId) ?? []), row]);
 
   const friends: Friend[] = [];
@@ -89,7 +98,7 @@ export async function getSocial(viewer: Viewer, from: DateStr) {
         friendshipId: link.id,
         activity: toActivity(
           habitsByUser.get(person.id) ?? [],
-          checkInsByUser.get(person.id) ?? [],
+          unpackCheckIns(checkInsByUser.get(person.id) ?? [], from),
           safeTimeZone(person.timezone),
         ),
       });
@@ -101,37 +110,41 @@ export async function getSocial(viewer: Viewer, from: DateStr) {
   }
   friends.sort((a, b) => a.name.localeCompare(b.name));
 
-  return { friends, incoming, outgoing, feed: buildFeed(friends, habits, checkIns, viewer.today) };
+  return { friends, incoming, outgoing, feed: buildFeed(friends, habits, checkIns, from) };
 }
 
-/** Friends' recently completed habits (private habit names hidden), newest first. */
+/**
+ * Friends' recently completed habits (private habit names hidden), newest first. Only check-ins
+ * from the last few days carry an update time (`u`), so only those can show up.
+ */
 function buildFeed(
   friends: Friend[],
   habits: FriendHabitRow[],
-  checkIns: FriendCheckInRow[],
-  today: DateStr,
+  checkIns: FriendCheckIns[],
+  from: DateStr,
   limit = 8,
 ): ActivityItem[] {
   const people = new Map(friends.map((friend) => [friend.id, friend]));
   const habitById = new Map(habits.map((habit) => [habit.id, habit]));
   const since = Date.now() - 3 * 86_400_000;
-  const sinceDay = addDays(today, -2);
 
   return checkIns
     .flatMap((row) => {
       const habit = habitById.get(row.habitId);
       const friend = people.get(row.userId);
-      const day = fromDbDate(row.date);
-      if (!habit || !friend || row.value < habit.target || row.updatedAt.getTime() < since || day < sinceDay) return [];
-      return [
-        {
-          id: `${row.habitId}-${day}`,
-          person: { id: friend.id, name: friend.name, username: friend.username, timezone: friend.timezone },
-          habitName: habit.isPrivate ? null : habit.name,
-          icon: habit.isPrivate ? "circle-check" : habit.icon,
-          at: row.updatedAt,
-        },
-      ];
+      if (!habit || !friend) return [];
+      return row.u.flatMap((updatedAt, index) => {
+        if (updatedAt === null || updatedAt < since || row.v[index] < habit.target) return [];
+        return [
+          {
+            id: `${row.habitId}-${addDays(from, row.d[index])}`,
+            person: { id: friend.id, name: friend.name, username: friend.username, timezone: friend.timezone },
+            habitName: habit.isPrivate ? null : habit.name,
+            icon: habit.isPrivate ? "circle-check" : habit.icon,
+            at: new Date(updatedAt),
+          },
+        ];
+      });
     })
     .sort((a, b) => b.at.getTime() - a.at.getTime())
     .slice(0, limit);
@@ -227,9 +240,11 @@ export async function getProfile(viewer: Viewer, username: string, from: DateStr
       select id, name, icon, days, target, unit, "isPrivate", "createdAt", "archivedAt"
       from habit where "userId" = (select id from "user" where username = ${username})
       order by "sortOrder", "createdAt"`,
-    prisma.$queryRaw<{ habitId: string; date: Date; value: number }[]>`
-      select "habitId", date, value from check_in
-      where "userId" = (select id from "user" where username = ${username}) and date >= ${toDbDate(from)}`,
+    prisma.$queryRaw<PackedCheckIns[]>`
+      select "habitId", array_agg(date - ${from}::date order by date) as d, array_agg(value order by date) as v
+      from check_in
+      where "userId" = (select id from "user" where username = ${username}) and date >= ${from}::date
+      group by "habitId"`,
   ]);
   const row = people[0];
   if (!row) return null;
@@ -238,7 +253,9 @@ export async function getProfile(viewer: Viewer, username: string, from: DateStr
     person: { id: row.id, name: row.name, username: row.username, timezone: row.timezone } satisfies PersonRef,
     isFriend,
     // Only share activity with friends.
-    activity: isFriend ? toActivity(habits, checkIns, safeTimeZone(row.timezone)) : { habits: [], checkIns: [] },
+    activity: isFriend
+      ? toActivity(habits, unpackCheckIns(checkIns, from), safeTimeZone(row.timezone))
+      : { habits: [], checkIns: [] },
   };
 }
 
