@@ -13,7 +13,7 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-sm">
       <Container className="flex h-16 items-center justify-between gap-4">
-        <Logo />
+        <Logo compactOnMobile />
         {/* Reads the session, so it streams in behind a Suspense boundary. */}
         <Suspense fallback={<div className="size-8 animate-pulse rounded-full bg-muted" />}>
           <HeaderAccount />

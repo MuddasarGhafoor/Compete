@@ -38,7 +38,14 @@ export function LogoMark({ className, tone = "default" }: { className?: string; 
   );
 }
 
-export function Logo({ className, tone = "default" }: { className?: string; tone?: Tone }) {
+type LogoProps = {
+  className?: string;
+  tone?: Tone;
+  /** Show only the mark on small phones (the name stays readable by screen readers). */
+  compactOnMobile?: boolean;
+};
+
+export function Logo({ className, tone = "default", compactOnMobile = false }: LogoProps) {
   return (
     <Link
       href="/"
@@ -52,6 +59,7 @@ export function Logo({ className, tone = "default" }: { className?: string; tone
         className={cn(
           "text-lg font-semibold tracking-tight",
           tone === "light" && "text-panel-foreground",
+          compactOnMobile && "max-sm:sr-only",
         )}
       >
         Compete

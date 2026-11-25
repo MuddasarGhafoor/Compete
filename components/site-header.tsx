@@ -18,7 +18,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-sm">
       <Container className="flex h-16 items-center justify-between gap-4">
-        <Logo />
+        <Logo compactOnMobile />
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
           <FaqLink />
