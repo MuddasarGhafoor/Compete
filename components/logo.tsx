@@ -2,22 +2,26 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * The Compete mark: a winner's podium on a tile.
- * Flat and monochrome: the tile uses the text color and the podium the page color,
- * so it flips automatically in dark mode.
+ * The Compete mark: two arcs racing around a ring (you in green, a friend in ochre)
+ * around a check mark for a habit done. Colors come from theme tokens, so it adapts
+ * to dark mode.
  */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden className={cn("size-8", className)}>
-      <rect width="32" height="32" rx="8" className="fill-foreground" />
-      <g className="fill-background">
-        {/* 2nd place */}
-        <path d="M7 24v-6.5A1.5 1.5 0 0 1 8.5 16H13v8H7Z" fillOpacity=".7" />
-        {/* 1st place */}
-        <path d="M13 24V10.5A1.5 1.5 0 0 1 14.5 9h3a1.5 1.5 0 0 1 1.5 1.5V24h-6Z" />
-        {/* 3rd place */}
-        <path d="M19 24v-5h4.5a1.5 1.5 0 0 1 1.5 1.5V24h-6Z" fillOpacity=".45" />
-      </g>
+    <svg
+      viewBox="0 0 32 32"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={cn("size-8", className)}
+    >
+      {/* You: the leading arc (35° to 235°) */}
+      <path d="M22.31 6.99A11 11 0 1 1 6.99 22.31" strokeWidth="4.5" className="stroke-primary" />
+      {/* A friend, close behind (280° to 350°) */}
+      <path d="M5.17 14.09A11 11 0 0 1 14.09 5.17" strokeWidth="4.5" className="stroke-warm" />
+      {/* Done */}
+      <path d="m11.5 16.25 3 3 6-6.5" strokeWidth="2.6" className="stroke-foreground" />
     </svg>
   );
 }

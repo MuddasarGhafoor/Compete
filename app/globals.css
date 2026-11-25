@@ -38,6 +38,7 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-warm: var(--warm);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -64,6 +65,8 @@
   --popover-foreground: oklch(0.24 0.012 60);
   --primary: oklch(0.44 0.075 158);
   --primary-foreground: oklch(0.985 0.004 85);
+  /* Warm ochre: second brand color (logo, streaks, first place) */
+  --warm: oklch(0.72 0.12 68);
   --secondary: oklch(0.952 0.006 85);
   --secondary-foreground: oklch(0.24 0.012 60);
   --muted: oklch(0.952 0.006 85);
@@ -102,6 +105,7 @@
     --popover-foreground: oklch(0.94 0.006 85);
     --primary: oklch(0.76 0.08 158);
     --primary-foreground: oklch(0.2 0.02 158);
+    --warm: oklch(0.78 0.11 70);
     --secondary: oklch(0.25 0.007 60);
     --secondary-foreground: oklch(0.94 0.006 85);
     --muted: oklch(0.25 0.007 60);

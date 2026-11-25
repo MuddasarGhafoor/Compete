@@ -48,7 +48,7 @@ export function TodayPreview({ className, compact = false }: TodayPreviewProps) 
           </p>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
-          <Flame className="size-3.5 text-amber-600 dark:text-amber-400" />
+          <Flame className="size-3.5 text-warm" />
           12-day streak
         </span>
       </div>
@@ -100,7 +100,7 @@ function LeaderboardRows({ people, className }: { people: Person[]; className?: 
       {people.map((person, index) => (
         <li key={person.name} className="flex items-center gap-3 text-sm">
           <span className="grid w-4 place-items-center text-xs text-muted-foreground tabular-nums">
-            {index === 0 ? <Crown className="size-3.5 text-amber-600 dark:text-amber-400" /> : index + 1}
+            {index === 0 ? <Crown className="size-3.5 text-warm" /> : index + 1}
           </span>
           <span
             className={cn(

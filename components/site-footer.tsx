@@ -11,6 +11,9 @@ export function SiteFooter() {
           <p className="text-sm text-muted-foreground">Build better habits, together.</p>
         </div>
         <nav aria-label="Footer" className="flex gap-6 text-sm">
+          <Link href="/faq" className="text-muted-foreground transition-colors hover:text-foreground">
+            FAQ
+          </Link>
           <Link href="/sign-in" className="text-muted-foreground transition-colors hover:text-foreground">
             Sign in
           </Link>
