@@ -196,7 +196,7 @@ async function ChallengeContent({ params }: { params: PageProps<"/challenges/[id
                             title={`${formatDay(day, { weekday: "short", month: "short", day: "numeric" })}: ${done ? "done" : future ? "upcoming" : "missed"}`}
                             className={cn(
                               "block size-4 rounded-[4px]",
-                              done ? "bg-primary" : future ? "border border-dashed border-border" : "bg-muted",
+                              done ? "bg-primary" : future ? "border border-dashed border-foreground/25" : "bg-muted",
                             )}
                           />
                         </td>

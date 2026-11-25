@@ -13,7 +13,7 @@ export type WeeklyPoint = { label: string; full: string; score: number | null };
 export function WeeklyChart({ data }: { data: WeeklyPoint[] }) {
   return (
     <ChartContainer config={config} className="aspect-auto h-60 w-full">
-      <AreaChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+      <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} minTickGap={16} />
         <YAxis
@@ -21,7 +21,7 @@ export function WeeklyChart({ data }: { data: WeeklyPoint[] }) {
           ticks={[0, 50, 100]}
           tickLine={false}
           axisLine={false}
-          width={40}
+          width={48}
           tickFormatter={(value) => `${value}%`}
         />
         <ChartTooltip

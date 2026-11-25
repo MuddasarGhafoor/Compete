@@ -130,7 +130,7 @@ export function HabitChecklist({ items, day }: HabitChecklistProps) {
                             style={{ width: `${Math.min(100, (value / item.target) * 100)}%` }}
                           />
                         </span>
-                        <span className="text-xs text-muted-foreground tabular-nums">
+                        <span className="text-xs whitespace-nowrap text-muted-foreground tabular-nums">
                           {value} / {item.target} {item.unit}
                         </span>
                       </span>

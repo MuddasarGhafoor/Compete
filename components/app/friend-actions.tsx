@@ -73,9 +73,10 @@ export function RemoveFriendButton({ friendshipId, name }: { friendshipId: strin
   const { pending, run } = useAction();
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button size="sm" variant="ghost" aria-label={`Remove ${name}`} />}>
-        <UserMinus data-icon="inline-start" />
-        Remove
+      <AlertDialogTrigger
+        render={<Button size="icon-sm" variant="ghost" aria-label={`Remove ${name}`} title={`Remove ${name}`} />}
+      >
+        <UserMinus />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

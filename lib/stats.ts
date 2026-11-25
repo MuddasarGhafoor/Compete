@@ -1,7 +1,8 @@
 /**
  * Scoring rules (pure functions, safe on server and client):
  *   - Daily %   = habits done ÷ habits scheduled that day. A habit is done when value >= target.
- *   - Weekly %  = average of the daily %s, Monday to Sunday, up to today.
+ *   - Weekly %  = average of the daily %s, Monday to Sunday, for finished days.
+ *                 Today counts once it reaches 100% (or when it's over).
  *                 Days with nothing scheduled don't count.
  *   - Streak    = consecutive days at 100%. Days with nothing scheduled are skipped,
  *                 and today doesn't break a streak while it's still in progress.
@@ -101,10 +102,21 @@ export function averagePercent(days: DayStat[]): number | null {
   return values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
 }
 
-/** Weekly score for the week starting `weekStart`, counting days up to `today`. */
+/**
+ * Weekly score for the week starting `weekStart`: the average of finished days.
+ * Today only counts once it's at 100%, so checking off a habit can never lower your score
+ * (and people in different timezones are compared fairly mid-day).
+ */
 export function weekScore(days: DayStat[], weekStart: DateStr, today: DateStr): number | null {
   const weekEnd = addDays(weekStart, 6);
-  return averagePercent(days.filter((day) => day.date >= weekStart && day.date <= weekEnd && day.date <= today));
+  return averagePercent(
+    days.filter(
+      (day) =>
+        day.date >= weekStart &&
+        day.date <= weekEnd &&
+        (day.date < today || (day.date === today && day.percent === 100)),
+    ),
+  );
 }
 
 export type HabitSummary = {

@@ -45,12 +45,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const row = await prisma.user
     .findUnique({ where: { id: devUser.id }, select: { name: true, username: true, timezone: true } })
     .catch(() => null);
-  return {
-    ...devUser,
-    name: row?.name ?? devUser.name,
-    username: row?.username ?? null,
-    timezone: row?.timezone ?? null,
-  };
+  // No row (deleted, or the database is unreachable): treat as signed out; the wrench recreates it.
+  if (!row) return null;
+  return { ...devUser, name: row.name, username: row.username, timezone: row.timezone };
 });
 
 /** Same as getCurrentUser, but sends signed-out visitors to /sign-in. */

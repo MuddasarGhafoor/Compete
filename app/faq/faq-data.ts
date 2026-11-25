@@ -48,7 +48,7 @@ export const faqGroups: FaqGroup[] = [
       {
         id: "score",
         q: "How is my score calculated?",
-        a: "Each day, your score is the percentage of that day's scheduled habits you completed. Your weekly score is the average of your daily scores, and that's what the leaderboard ranks.",
+        a: "Each day, your score is the percentage of that day's scheduled habits you completed. Your weekly score is the average of your daily scores, and that's what the leaderboard ranks. Today joins the average once you hit 100% or the day ends, so checking off a habit never lowers your score.",
       },
       {
         id: "empty-days",

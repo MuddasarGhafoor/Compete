@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import { addDays, dayIn, dayRange, safeTimeZone, type DateStr } from "@/lib/dates";
+import { addDays, dayIn, dayRange, fromDbDate, safeTimeZone, toDbDate, type DateStr } from "@/lib/dates";
 import { currentStreak, dailyStats, indexCheckIns, weekScore } from "@/lib/stats";
 import { loadActivity, type Viewer } from "./core";
 
@@ -116,8 +116,10 @@ export type ActivityItem = {
 export async function getFriendActivity(friendIds: string[], limit = 10): Promise<ActivityItem[]> {
   if (friendIds.length === 0) return [];
   const since = new Date(Date.now() - 3 * 86_400_000);
+  // Recent activity on recent days (not back-filled history).
+  const sinceDay = toDbDate(fromDbDate(new Date(Date.now() - 2 * 86_400_000)));
   const rows = await prisma.checkIn.findMany({
-    where: { userId: { in: friendIds }, updatedAt: { gte: since } },
+    where: { userId: { in: friendIds }, updatedAt: { gte: since }, date: { gte: sinceDay } },
     orderBy: { updatedAt: "desc" },
     take: 50,
     include: {

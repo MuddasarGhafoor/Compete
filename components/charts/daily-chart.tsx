@@ -19,7 +19,7 @@ export type DailyPoint = {
 export function DailyChart({ data }: { data: DailyPoint[] }) {
   return (
     <ChartContainer config={config} className="aspect-auto h-60 w-full">
-      <BarChart data={data} margin={{ top: 8, right: 4, left: -8, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="label"
@@ -34,7 +34,7 @@ export function DailyChart({ data }: { data: DailyPoint[] }) {
           ticks={[0, 50, 100]}
           tickLine={false}
           axisLine={false}
-          width={40}
+          width={48}
           tickFormatter={(value) => `${value}%`}
         />
         <ChartTooltip

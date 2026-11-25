@@ -127,7 +127,7 @@ async function FriendProfile({ params }: { params: PageProps<"/friends/[username
 
       <WeekStrip days={weekDays} />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

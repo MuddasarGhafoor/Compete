@@ -30,7 +30,7 @@ export function ComparisonChart({ series, data }: { series: ComparisonSeries[]; 
 
   return (
     <ChartContainer config={config} className="aspect-auto h-64 w-full">
-      <LineChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+      <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis
@@ -38,7 +38,7 @@ export function ComparisonChart({ series, data }: { series: ComparisonSeries[]; 
           ticks={[0, 50, 100]}
           tickLine={false}
           axisLine={false}
-          width={40}
+          width={48}
           tickFormatter={(value) => `${value}%`}
         />
         <ChartTooltip

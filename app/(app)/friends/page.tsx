@@ -51,7 +51,7 @@ async function FriendsContent({ searchParams }: { searchParams: PageProps<"/frie
     <div className="space-y-8">
       <PageHeader title="Friends" description="The people you compete with. Friend requests need both sides to accept." />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-6">
           {/* Search */}
           <Card>
@@ -137,21 +137,15 @@ async function FriendsContent({ searchParams }: { searchParams: PageProps<"/frie
                         className="min-w-0 flex-1 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                       >
                         <p className="truncate font-medium hover:underline">{friend.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {friend.username ? `@${friend.username}` : "No username yet"}
+                        <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                          <span className="truncate">{friend.username ? `@${friend.username}` : "No username yet"}</span>
+                          <span className="tabular-nums">{formatPercent(stats?.score)} this week</span>
+                          <span className="flex items-center gap-1 tabular-nums">
+                            <Flame className="size-3 text-warm" />
+                            {plural(stats?.streak ?? 0, "day")}
+                          </span>
                         </p>
                       </Link>
-                      <div className="hidden text-right sm:block">
-                        <p className="text-sm font-medium tabular-nums">{formatPercent(stats?.score)}</p>
-                        <p className="text-xs text-muted-foreground">this week</p>
-                      </div>
-                      <div className="hidden w-20 text-right sm:block">
-                        <p className="flex items-center justify-end gap-1 text-sm font-medium tabular-nums">
-                          <Flame className="size-3.5 text-warm" />
-                          {stats?.streak ?? 0}
-                        </p>
-                        <p className="text-xs text-muted-foreground">streak</p>
-                      </div>
                       <RemoveFriendButton friendshipId={friend.friendshipId} name={friend.name} />
                     </li>
                   );
