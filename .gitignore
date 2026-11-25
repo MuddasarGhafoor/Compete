@@ -43,3 +43,9 @@ next-env.d.ts
 # AI agent instruction files (local only)
 AGENTS.md
 CLAUDE.md
+
+# allow the env template
+!.env.example
+
+# generated Prisma client
+/lib/generated
