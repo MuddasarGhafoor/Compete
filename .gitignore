@@ -49,3 +49,4 @@ CLAUDE.md
 
 # generated Prisma client
 /lib/generated
+.neon

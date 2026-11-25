@@ -8,6 +8,7 @@ export default defineConfig({
   },
   datasource: {
     // Prisma CLI (migrations) uses Neon's direct, non-pooled connection.
-    url: process.env.DIRECT_URL,
+    // `neon deploy` / `neon env pull` writes it to .env as DATABASE_URL_UNPOOLED.
+    url: process.env.DATABASE_URL_UNPOOLED,
   },
 });
