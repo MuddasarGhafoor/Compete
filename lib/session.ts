@@ -4,12 +4,16 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getDevUser, isDevLoginEnabled } from "@/lib/dev-auth"; // dev-login
+import { prisma } from "@/lib/prisma"; // dev-login
 
 export type CurrentUser = {
   id: string;
   name: string;
   email: string;
-  /** True for the fake user from the development-only dev login. */
+  username: string | null;
+  /** IANA timezone; null until the browser reports it (see TimezoneSync) */
+  timezone: string | null;
+  /** True for the development-only dev login user. */
   isDevUser?: boolean;
 };
 
@@ -25,17 +29,28 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   try {
     session = await auth.api.getSession({ headers: requestHeaders });
   } catch (error) {
-    // dev-login: keep pages working while the database isn't connected yet.
+    // dev-login: keep pages working if the database is unreachable during development.
     if (!isDevLoginEnabled) throw error;
     console.warn("[dev login] Could not read the session.", error);
   }
 
   if (session) {
-    const { id, name, email } = session.user;
-    return { id, name, email };
+    const { id, name, email, username, timezone } = session.user;
+    return { id, name, email, username: username ?? null, timezone: timezone ?? null };
   }
 
-  return getDevUser(); // dev-login: returns null when dev login is off or unused
+  // dev-login: the dev user has a real database row (created by /dev-login).
+  const devUser = await getDevUser();
+  if (!devUser) return null;
+  const row = await prisma.user
+    .findUnique({ where: { id: devUser.id }, select: { name: true, username: true, timezone: true } })
+    .catch(() => null);
+  return {
+    ...devUser,
+    name: row?.name ?? devUser.name,
+    username: row?.username ?? null,
+    timezone: row?.timezone ?? null,
+  };
 });
 
 /** Same as getCurrentUser, but sends signed-out visitors to /sign-in. */

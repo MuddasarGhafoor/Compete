@@ -4,12 +4,15 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
+import { safeTimeZone } from "@/lib/dates";
 import { endDevLogin } from "@/lib/dev-auth"; // dev-login
+import { prisma } from "@/lib/prisma";
+import { normalizeUsername, usernameError } from "@/lib/validation";
 
 export type AuthFormState = {
   error?: string;
   // Echoed back so the form keeps what the user typed after an error.
-  fields?: { name?: string; email?: string };
+  fields?: { name?: string; email?: string; username?: string };
 };
 
 function readText(formData: FormData, key: string) {
@@ -28,12 +31,20 @@ export async function signUp(
   formData: FormData,
 ): Promise<AuthFormState> {
   const name = readText(formData, "name");
+  const username = normalizeUsername(readText(formData, "username"));
   const email = readText(formData, "email").toLowerCase();
   const password = String(formData.get("password") ?? "");
-  const fields = { name, email };
+  // Sent by the browser (hidden field); used for "today" in the user's timezone.
+  const detectedZone = readText(formData, "timezone");
+  const timezone = safeTimeZone(detectedZone) === detectedZone ? detectedZone : undefined;
+  const fields = { name, email, username };
 
   if (name.length < 2) {
     return { error: "Please enter your name (at least 2 characters).", fields };
+  }
+  const invalidUsername = usernameError(username);
+  if (invalidUsername) {
+    return { error: invalidUsername, fields };
   }
   if (!email.includes("@")) {
     return { error: "Please enter a valid email address.", fields };
@@ -41,10 +52,13 @@ export async function signUp(
   if (password.length < 8) {
     return { error: "Password must be at least 8 characters.", fields };
   }
+  if (await prisma.user.findUnique({ where: { username }, select: { id: true } })) {
+    return { error: "That username is taken. Try another.", fields };
+  }
 
   try {
     await auth.api.signUpEmail({
-      body: { name, email, password },
+      body: { name, email, password, username, timezone },
       headers: await headers(),
     });
   } catch (error) {

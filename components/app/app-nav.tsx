@@ -7,14 +7,17 @@ import { MotionProvider } from "@/components/motion";
 import { cn } from "@/lib/utils";
 import { appNavItems, tabBarItems } from "./nav-items";
 
-function isActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
+/*
+ * usePathname() is request data on dynamic routes, so with Cache Components these navs must sit
+ * inside <Suspense>. The parents render `pathname={null}` versions as the fallback (same layout,
+ * no active highlight), then the live versions stream in.
+ */
+
+function isActive(pathname: string | null, href: string) {
+  return pathname !== null && (pathname === href || pathname.startsWith(`${href}/`));
 }
 
-/** Vertical nav for the desktop sidebar. The active highlight slides between items. */
-export function SidebarNav() {
-  const pathname = usePathname();
-
+function SidebarLinks({ pathname }: { pathname: string | null }) {
   return (
     <MotionProvider>
       <nav aria-label="Main" className="space-y-1 px-3">
@@ -52,10 +55,7 @@ export function SidebarNav() {
   );
 }
 
-/** Bottom tab bar for phones and tablets. */
-export function MobileTabBar() {
-  const pathname = usePathname();
-
+function TabBarLinks({ pathname }: { pathname: string | null }) {
   return (
     <nav
       aria-label="Main"
@@ -74,9 +74,7 @@ export function MobileTabBar() {
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {active && (
-                  <span aria-hidden className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-primary" />
-                )}
+                {active && <span aria-hidden className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-primary" />}
                 <Icon className="size-5" />
                 {label}
               </Link>
@@ -86,4 +84,22 @@ export function MobileTabBar() {
       </ul>
     </nav>
   );
+}
+
+/** Vertical nav for the desktop sidebar. The active highlight slides between items. */
+export function SidebarNav() {
+  return <SidebarLinks pathname={usePathname()} />;
+}
+
+export function SidebarNavFallback() {
+  return <SidebarLinks pathname={null} />;
+}
+
+/** Bottom tab bar for phones and tablets. */
+export function MobileTabBar() {
+  return <TabBarLinks pathname={usePathname()} />;
+}
+
+export function MobileTabBarFallback() {
+  return <TabBarLinks pathname={null} />;
 }

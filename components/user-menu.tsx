@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
-import { CalendarCheck, ChevronDown, ChevronsUpDown, Loader2, LogOut, Settings } from "lucide-react";
+import { CalendarCheck, ChevronDown, ChevronsUpDown, Loader2, LogOut, Settings, Swords } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -14,14 +14,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getInitials } from "@/lib/format";
 import type { CurrentUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
-
-export function getInitials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  const letters = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : name.slice(0, 2);
-  return letters.toUpperCase();
-}
 
 type UserMenuProps = {
   user: CurrentUser;
@@ -78,6 +73,10 @@ export function UserMenu({ user, variant = "compact" }: UserMenuProps) {
         <DropdownMenuItem render={<Link href="/today" />}>
           <CalendarCheck />
           Today
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/challenges" />}>
+          <Swords />
+          Challenges
         </DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/settings" />}>
           <Settings />

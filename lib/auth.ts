@@ -11,6 +11,14 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
   },
+  user: {
+    // Extra columns on the user table (see prisma/schema.prisma).
+    additionalFields: {
+      username: { type: "string", required: false, input: true },
+      timezone: { type: "string", required: false, input: true },
+    },
+    deleteUser: { enabled: true },
+  },
   // Lets Server Actions set and clear the session cookie. Must be the last plugin.
   plugins: [nextCookies()],
 });

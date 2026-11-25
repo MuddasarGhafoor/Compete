@@ -5,7 +5,7 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/user-menu";
 import { getCurrentUser } from "@/lib/session";
-import { SidebarNav } from "./app-nav";
+import { SidebarNav, SidebarNavFallback } from "./app-nav";
 
 /** Desktop sidebar: logo, main nav, and account + theme at the bottom. */
 export function AppSidebar() {
@@ -16,7 +16,9 @@ export function AppSidebar() {
       </div>
 
       <div className="mt-2 flex-1 overflow-y-auto">
-        <SidebarNav />
+        <Suspense fallback={<SidebarNavFallback />}>
+          <SidebarNav />
+        </Suspense>
       </div>
 
       <div className="shrink-0 space-y-1 border-t p-3">

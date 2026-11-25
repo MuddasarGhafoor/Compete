@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import { ThemeWatcher } from "@/components/theme-watcher";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { themeScript } from "@/lib/theme";
 import "./globals.css";
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="isolate flex min-h-dvh flex-col">
           <TooltipProvider>{children}</TooltipProvider>
         </div>
+        <Toaster position="bottom-right" />
       </body>
     </html>
   );

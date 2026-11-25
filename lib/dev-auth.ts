@@ -8,7 +8,8 @@ import type { NextRequest, NextResponse } from "next/server";
  * and goes straight to the Today page. Works only when `DEV_LOGIN="true"` is in .env AND
  * the app runs with `pnpm run dev`. Production builds always ignore it.
  *
- * The dev user is not saved in the database, so it is for viewing pages, not saving data.
+ * /dev-login also creates the Dev User row in the database (id "dev-user"), so habits,
+ * check-ins and the rest can be saved while developing.
  *
  * To remove dev login completely:
  *   1. Delete this file, `app/dev-login/route.ts` and `components/dev-login-button.tsx`.

@@ -22,6 +22,19 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  // App fields (also declared as Better Auth additionalFields in lib/auth.ts)
+  username String? @unique
+  /// IANA timezone, e.g. "Asia/Karachi". Defines the user's "today".
+  timezone String?
+
+  habits                  Habit[]
+  checkIns                CheckIn[]
+  sentFriendRequests      Friendship[]           @relation("FriendRequester")
+  receivedFriendRequests  Friendship[]           @relation("FriendAddressee")
+  createdChallenges       Challenge[]
+  challengeParticipations ChallengeParticipant[]
+  challengeCheckIns       ChallengeCheckIn[]
+
   @@map("user")
 }
 
@@ -70,4 +83,129 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+// ---------------------------------------------------------------------------
+// Habits and check-ins
+// ---------------------------------------------------------------------------
+
+model Habit {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  /// Key into components/habit-icon.tsx
+  icon       String    @default("circle-check")
+  /// Scheduled weekdays: 0 = Monday ... 6 = Sunday
+  days       Int[]
+  /// 1 = done / not done. Higher = a number target (e.g. 8 glasses).
+  target     Int       @default(1)
+  /// Optional unit for number targets, e.g. "glasses", "minutes"
+  unit       String?
+  /// Hide the habit's name from friends (it still counts toward scores)
+  isPrivate  Boolean   @default(false)
+  sortOrder  Int       @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  checkIns   CheckIn[]
+
+  @@index([userId])
+  @@map("habit")
+}
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// The user's local calendar day
+  date      DateTime @db.Date
+  /// Amount done; the habit counts as done when value >= habit.target
+  value     Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([habitId, date])
+  @@index([userId, date])
+  @@map("check_in")
+}
+
+// ---------------------------------------------------------------------------
+// Friends
+// ---------------------------------------------------------------------------
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+model Friendship {
+  id          String           @id @default(cuid())
+  requesterId String
+  requester   User             @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String
+  addressee   User             @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  respondedAt DateTime?
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+  @@map("friendship")
+}
+
+// ---------------------------------------------------------------------------
+// Challenges
+// ---------------------------------------------------------------------------
+
+model Challenge {
+  id           String                 @id @default(cuid())
+  title        String
+  description  String?
+  icon         String                 @default("target")
+  startDate    DateTime               @db.Date
+  endDate      DateTime               @db.Date
+  creatorId    String
+  creator      User                   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  createdAt    DateTime               @default(now())
+  participants ChallengeParticipant[]
+  checkIns     ChallengeCheckIn[]
+
+  @@map("challenge")
+}
+
+enum ParticipantStatus {
+  INVITED
+  JOINED
+}
+
+model ChallengeParticipant {
+  id          String            @id @default(cuid())
+  challengeId String
+  challenge   Challenge         @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      ParticipantStatus @default(INVITED)
+  joinedAt    DateTime?
+  createdAt   DateTime          @default(now())
+
+  @@unique([challengeId, userId])
+  @@index([userId])
+  @@map("challenge_participant")
+}
+
+model ChallengeCheckIn {
+  id          String    @id @default(cuid())
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// The participant's local calendar day
+  date        DateTime  @db.Date
+  createdAt   DateTime  @default(now())
+
+  @@unique([challengeId, userId, date])
+  @@map("challenge_check_in")
 }

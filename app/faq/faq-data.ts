@@ -25,7 +25,7 @@ export const faqGroups: FaqGroup[] = [
       {
         id: "habit-types",
         q: "What kind of habits can I track?",
-        a: "Anything you can mark as done or not done, like \"Go for a run\", \"Read 20 pages\" or \"No sugar\". Habits with a number target, like 8 glasses of water, are coming later.",
+        a: "Anything you can mark as done or not done, like \"Go for a run\", \"Read 20 pages\" or \"No sugar\". You can also set a number target, like 8 glasses of water or 30 minutes, and count up through the day.",
       },
       {
         id: "how-many",
@@ -76,7 +76,7 @@ export const faqGroups: FaqGroup[] = [
       {
         id: "add-friends",
         q: "How do I add friends?",
-        a: "Send them a friend request. Once they accept, you'll both show up on each other's weekly leaderboard.",
+        a: "Search for their username or name on the Friends page and send a request. Once they accept, you'll both show up on each other's weekly leaderboard.",
       },
       {
         id: "privacy",
@@ -96,7 +96,7 @@ export const faqGroups: FaqGroup[] = [
       {
         id: "challenges",
         q: "What are challenges?",
-        a: "Coming soon. Someone picks one habit and a time frame, friends join, and everyone tracks the same thing for a head-to-head comparison.",
+        a: "Someone picks one thing to stick to and a length (7 to 30 days), then invites friends. Everyone checks in once a day, and the standings show who kept it up the most.",
       },
     ],
   },

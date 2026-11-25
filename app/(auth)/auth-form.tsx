@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { CircleAlert, Eye, EyeOff, Loader2 } from "lucide-react";
 import { signIn, signUp, type AuthFormState } from "@/app/actions/auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -42,6 +42,13 @@ export function AuthForm({ mode }: AuthFormProps) {
     isSignUp ? signUp : signIn,
     {},
   );
+  const timezoneRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (timezoneRef.current) {
+      timezoneRef.current.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+  });
 
   return (
     <div className="w-full">
@@ -52,19 +59,42 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       <form action={formAction} className="mt-6 space-y-4">
         {isSignUp && (
-          <div className="space-y-2">
-            <Label htmlFor="name">Full name</Label>
-            <Input
-              id="name"
-              name="name"
-              type="text"
-              autoComplete="name"
-              placeholder="Your name"
-              required
-              minLength={2}
-              defaultValue={state.fields?.name}
-              className="h-10"
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full name</Label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                placeholder="Your name"
+                required
+                minLength={2}
+                defaultValue={state.fields?.name}
+                className="h-10"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="alex_runs"
+                required
+                minLength={3}
+                maxLength={20}
+                pattern="@?[A-Za-z0-9_]{3,20}"
+                title="3–20 characters: letters, numbers and underscores"
+                defaultValue={state.fields?.username}
+                className="h-10"
+              />
+            </div>
+            {/* Filled in by the browser so "today" uses your timezone. */}
+            <input ref={timezoneRef} type="hidden" name="timezone" />
           </div>
         )}
 

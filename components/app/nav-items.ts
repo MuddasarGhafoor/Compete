@@ -23,9 +23,9 @@ export const appNavItems: NavItem[] = [
   { href: "/progress", label: "Progress", icon: ChartColumn },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/friends", label: "Friends", icon: Users },
-  { href: "/challenges", label: "Challenges", icon: Swords, soon: true },
+  { href: "/challenges", label: "Challenges", icon: Swords },
 ];
 
-/** The five items in the phone bottom tab bar. */
-export const tabBarItems = appNavItems.filter((item) => !item.soon);
+/** The five items in the phone bottom tab bar (Challenges is in the account menu on phones). */
+export const tabBarItems = appNavItems.filter((item) => item.href !== "/challenges");
 
