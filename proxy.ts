@@ -15,6 +15,15 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Pages that need a signed-in user.
-  matcher: ["/today/:path*"],
+  // Every signed-in page (the app/(app) route group). Must be a literal list for Next.js;
+  // keep it in sync with components/app/nav-items.ts when adding pages.
+  matcher: [
+    "/today/:path*",
+    "/habits/:path*",
+    "/progress/:path*",
+    "/leaderboard/:path*",
+    "/friends/:path*",
+    "/challenges/:path*",
+    "/settings/:path*",
+  ],
 };
