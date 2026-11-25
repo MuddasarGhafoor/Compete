@@ -3,13 +3,13 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { DEV_USER, isDevAuthBypassEnabled } from "@/lib/dev-auth";
+import { getDevUser, isDevLoginEnabled } from "@/lib/dev-auth"; // dev-login
 
 export type CurrentUser = {
   id: string;
   name: string;
   email: string;
-  /** True for the fake user from the development login bypass. */
+  /** True for the fake user from the development-only dev login. */
   isDevUser?: boolean;
 };
 
@@ -25,9 +25,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   try {
     session = await auth.api.getSession({ headers: requestHeaders });
   } catch (error) {
-    // With the dev bypass on, keep pages working even if the database isn't connected yet.
-    if (!isDevAuthBypassEnabled) throw error;
-    console.warn("[dev auth bypass] Could not read session, using Dev User.", error);
+    // dev-login: keep pages working while the database isn't connected yet.
+    if (!isDevLoginEnabled) throw error;
+    console.warn("[dev login] Could not read the session.", error);
   }
 
   if (session) {
@@ -35,8 +35,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     return { id, name, email };
   }
 
-  // A real login always wins; the bypass only fills in for signed-out visitors.
-  return isDevAuthBypassEnabled ? { ...DEV_USER } : null;
+  return getDevUser(); // dev-login: returns null when dev login is off or unused
 });
 
 /** Same as getCurrentUser, but sends signed-out visitors to /sign-in. */

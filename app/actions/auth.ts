@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
+import { endDevLogin } from "@/lib/dev-auth"; // dev-login
 
 export type AuthFormState = {
   error?: string;
@@ -83,8 +84,9 @@ export async function signOut() {
   try {
     await auth.api.signOut({ headers: requestHeaders });
   } catch (error) {
-    // Nothing to sign out of (e.g. the dev bypass user); just leave.
+    // Nothing to sign out of (no real session); just leave.
     console.warn("Sign out skipped:", error);
   }
+  await endDevLogin(); // dev-login
   redirect("/sign-in");
 }

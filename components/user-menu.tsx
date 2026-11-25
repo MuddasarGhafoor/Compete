@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
-import { ChevronDown, Loader2, LogOut } from "lucide-react";
+import { CalendarCheck, ChevronDown, Loader2, LogOut } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -46,6 +47,11 @@ export function UserMenu({ user }: { user: CurrentUser }) {
             <span className="block truncate text-xs font-normal">{user.email}</span>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/today" />}>
+          <CalendarCheck />
+          Today
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"

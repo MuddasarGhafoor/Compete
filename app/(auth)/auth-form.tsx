@@ -50,7 +50,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         <p className="text-sm text-muted-foreground">{text.subtitle}</p>
       </div>
 
-      <form action={formAction} className="mt-8 space-y-5">
+      <form action={formAction} className="mt-6 space-y-4">
         {isSignUp && (
           <div className="space-y-2">
             <Label htmlFor="name">Full name</Label>

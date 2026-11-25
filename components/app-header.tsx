@@ -32,7 +32,7 @@ async function HeaderAccount() {
           className="gap-1 border-amber-500/40 text-amber-700 dark:text-amber-400"
         >
           <Wrench />
-          Dev bypass
+          Dev login
         </Badge>
       )}
       <UserMenu user={user} />
