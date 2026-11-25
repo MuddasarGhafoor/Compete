@@ -43,12 +43,14 @@ type LogoProps = {
   tone?: Tone;
   /** Show only the mark on small phones (the name stays readable by screen readers). */
   compactOnMobile?: boolean;
+  /** Where the logo links to (the app shell links to /today, not the home page). */
+  href?: string;
 };
 
-export function Logo({ className, tone = "default", compactOnMobile = false }: LogoProps) {
+export function Logo({ className, tone = "default", compactOnMobile = false, href = "/" }: LogoProps) {
   return (
     <Link
-      href="/"
+      href={href}
       className={cn(
         "inline-flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
         className,

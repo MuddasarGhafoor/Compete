@@ -23,9 +23,13 @@ model User {
   accounts      Account[]
 
   // App fields (also declared as Better Auth additionalFields in lib/auth.ts)
-  username String? @unique
+  username          String? @unique
   /// IANA timezone, e.g. "Asia/Karachi". Defines the user's "today".
-  timezone String?
+  timezone          String?
+  /// Hashed 4-digit PIN for unlocking a locked session (scrypt, "salt:hash")
+  pinHash           String?
+  /// Wrong PIN attempts in a row; 5 signs the session out
+  pinFailedAttempts Int     @default(0)
 
   habits                  Habit[]
   checkIns                CheckIn[]
@@ -48,6 +52,8 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Locked sessions need the user's PIN to open the app again (Better Auth additionalField)
+  locked    Boolean  @default(false)
 
   @@index([userId])
   @@map("session")

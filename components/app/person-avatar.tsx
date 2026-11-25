@@ -12,7 +12,8 @@ type PersonAvatarProps = {
 
 export function PersonAvatar({ name, isYou = false, size = "default", className }: PersonAvatarProps) {
   return (
-    <Avatar size={size} className={className}>
+    // bg-card under the tinted fallback keeps it opaque, so stacked avatars don't show through.
+    <Avatar size={size} className={cn("bg-card", className)}>
       <AvatarFallback
         className={cn(
           "font-semibold",

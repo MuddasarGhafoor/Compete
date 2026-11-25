@@ -16,7 +16,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getChallenges } from "@/lib/data/challenges";
 import { getViewer, loadUserActivity } from "@/lib/data/core";
-import { getFriendActivity, getFriendIds, getStandings } from "@/lib/data/social";
+import { buildStandings, friendsFrom, getSocial } from "@/lib/data/social";
 import { addDays, dayRange, formatDay, startOfWeek, timeAgo } from "@/lib/dates";
 import { formatPercent, ordinal, plural } from "@/lib/format";
 import { currentStreak, dailyStats, indexCheckIns, isScheduledOn, valueOn, weekScore } from "@/lib/stats";
@@ -43,14 +43,16 @@ async function TodayContent({ searchParams }: { searchParams: PageProps<"/today"
   const day = isYesterday ? yesterday : viewer.today;
 
   const weekStart = startOfWeek(viewer.today);
-  const from = addDays(viewer.today, -120);
-  const [activity, standings, friendIds, challenges] = await Promise.all([
-    loadUserActivity(viewer.id, viewer.tz, from, viewer.today),
-    getStandings(viewer, weekStart),
-    getFriendIds(viewer.id),
+  const from = addDays(viewer.today, -90);
+  // Everything in one parallel wave of database queries.
+  const socialFrom = friendsFrom(viewer.today);
+  const [activity, social, challenges] = await Promise.all([
+    loadUserActivity(viewer.id, viewer.tz, from),
+    getSocial(viewer, socialFrom),
     getChallenges(viewer),
   ]);
-  const feed = await getFriendActivity(friendIds, 6);
+  const standings = buildStandings(viewer, activity, from, social.friends, socialFrom, weekStart);
+  const feed = social.feed.slice(0, 6);
 
   const index = indexCheckIns(activity.checkIns);
   const days = dailyStats(activity.habits, index, from, viewer.today);
@@ -101,7 +103,7 @@ async function TodayContent({ searchParams }: { searchParams: PageProps<"/today"
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard
           icon={Target}
           label={isYesterday ? "Yesterday" : "Today"}
@@ -288,7 +290,7 @@ function TodaySkeleton() {
         <div className="h-8 w-40 rounded-md bg-muted" />
         <div className="h-4 w-56 rounded bg-muted" />
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[0, 1, 2].map((key) => (
           <div key={key} className="h-28 rounded-xl bg-muted" />
         ))}

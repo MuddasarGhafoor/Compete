@@ -16,51 +16,60 @@ function level(day: HeatmapDay) {
 }
 
 /**
- * Calendar heatmap, one column per week (Monday on top).
+ * Calendar heatmap, one column per week (Monday on top). The week columns stretch to fill the
+ * available width (square cells); on narrow screens it keeps a minimum cell size and scrolls.
  * `days` must start on a Monday and cover whole weeks.
  */
 export function Heatmap({ days }: { days: HeatmapDay[] }) {
   const [hovered, setHovered] = useState<HeatmapDay | null>(null);
   const weeks: HeatmapDay[][] = [];
   for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
+  const monthOf = (date: DateStr) => formatDay(date, { month: "short" });
 
   return (
     <div>
       <div className="no-scrollbar overflow-x-auto">
-        <div className="inline-flex gap-2">
-          <div className="grid grid-rows-7 gap-1 pt-5 text-[10px] text-muted-foreground">
-            {WEEKDAY_SHORT.map((label, index) => (
-              <span key={label} className={cn("h-3 leading-3", index % 2 === 1 && "invisible")}>
+        <div
+          className="grid min-w-max gap-1 sm:min-w-0"
+          style={{ gridTemplateColumns: `auto repeat(${weeks.length}, minmax(0.625rem, 1fr))` }}
+        >
+          {/* Month labels */}
+          <span />
+          {weeks.map((week, weekIndex) => (
+            <span key={week[0].date} className="h-4 overflow-visible text-[10px] whitespace-nowrap text-muted-foreground">
+              {weekIndex === 0 || monthOf(week[0].date) !== monthOf(weeks[weekIndex - 1][0].date) ? monthOf(week[0].date) : ""}
+            </span>
+          ))}
+
+          {/* One row per weekday */}
+          {WEEKDAY_SHORT.map((label, row) => (
+            <div key={label} className="contents">
+              <span
+                className={cn(
+                  "flex items-center pr-1 text-[10px] leading-none text-muted-foreground",
+                  row % 2 === 1 && "invisible",
+                )}
+              >
                 {label}
               </span>
-            ))}
-          </div>
-          <div className="flex gap-1">
-            {weeks.map((week, weekIndex) => {
-              const first = week[0];
-              const showMonth =
-                weekIndex === 0 || formatDay(first.date, { month: "short" }) !== formatDay(weeks[weekIndex - 1][0].date, { month: "short" });
-              return (
-                <div key={first.date} className="flex flex-col gap-1">
-                  <span className="h-4 text-[10px] whitespace-nowrap text-muted-foreground">
-                    {showMonth ? formatDay(first.date, { month: "short" }) : ""}
-                  </span>
-                  {week.map((day) => (
-                    <span
-                      key={day.date}
-                      onMouseEnter={() => setHovered(day)}
-                      onMouseLeave={() => setHovered(null)}
-                      className={cn(
-                        "size-3 rounded-[3px] transition-transform hover:scale-125",
-                        level(day),
-                        !day.future && "ring-1 ring-foreground/5 ring-inset",
-                      )}
-                    />
-                  ))}
-                </div>
-              );
-            })}
-          </div>
+              {weeks.map((week) => {
+                const day = week[row];
+                if (!day) return <span key={`${week[0].date}-${row}`} />;
+                return (
+                  <span
+                    key={day.date}
+                    onMouseEnter={() => setHovered(day)}
+                    onMouseLeave={() => setHovered(null)}
+                    className={cn(
+                      "aspect-square w-full rounded-[4px] transition-transform hover:scale-110",
+                      level(day),
+                      !day.future && "ring-1 ring-foreground/5 ring-inset",
+                    )}
+                  />
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
 

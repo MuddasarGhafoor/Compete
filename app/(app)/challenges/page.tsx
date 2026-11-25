@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getChallenges, type ChallengeStatus, type ChallengeView } from "@/lib/data/challenges";
 import { getViewer } from "@/lib/data/core";
-import { getFriendships } from "@/lib/data/social";
+import { getFriendList } from "@/lib/data/social";
 import { daysBetween, formatDay } from "@/lib/dates";
 import { plural } from "@/lib/format";
 
@@ -43,7 +43,7 @@ async function ChallengesContent({ searchParams }: { searchParams: PageProps<"/c
   const { status: statusParam } = await searchParams;
   const status = tabs.find((tab) => tab.status === statusParam)?.status ?? "active";
 
-  const [challenges, { friends }] = await Promise.all([getChallenges(viewer), getFriendships(viewer.id)]);
+  const [challenges, friends] = await Promise.all([getChallenges(viewer), getFriendList(viewer.id)]);
   const invites = challenges.filter((challenge) => challenge.myStatus === "INVITED" && challenge.status !== "finished");
   const joined = challenges.filter((challenge) => challenge.myStatus === "JOINED");
   const visible = joined.filter((challenge) => challenge.status === status);
@@ -107,7 +107,7 @@ async function ChallengesContent({ searchParams }: { searchParams: PageProps<"/c
             {status !== "finished" && newButton}
           </EmptyState>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {visible.map((challenge) => (
               <ChallengeCard key={challenge.id} challenge={challenge} today={viewer.today} />
             ))}
@@ -165,14 +165,14 @@ function ChallengeCard({ challenge, today }: { challenge: ChallengeView; today: 
 
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
+            {/* Initials need room, so the avatars sit side by side instead of overlapping. */}
+            <div className="flex gap-1">
               {challenge.participants.slice(0, 4).map((participant) => (
                 <PersonAvatar
                   key={participant.person.id}
                   name={participant.person.name}
                   isYou={participant.isYou}
                   size="sm"
-                  className="ring-2 ring-card"
                 />
               ))}
             </div>

@@ -122,11 +122,13 @@ export function weekScore(days: DayStat[], weekStart: DateStr, today: DateStr): 
 export type HabitSummary = {
   habit: HabitLite;
   currentStreak: number;
+  /** True when the streak reaches back past the loaded history (show it as "N+ days") */
+  streakCapped: boolean;
   bestStreak: number;
   /** % of scheduled days done in the last 30 days (null if never scheduled) */
   rate30: number | null;
-  /** Done (true) / missed (false) for each scheduled day of the last 14 days */
-  recent: { date: DateStr; done: boolean }[];
+  /** Each of the last 14 days: scheduled or not, and done or not */
+  recent: { date: DateStr; scheduled: boolean; done: boolean }[];
 };
 
 export function habitSummary(habit: HabitLite, index: CheckInIndex, from: DateStr, today: DateStr): HabitSummary {
@@ -134,10 +136,14 @@ export function habitSummary(habit: HabitLite, index: CheckInIndex, from: DateSt
   const done = (day: DateStr) => valueOn(index, habit.id, day) >= habit.target;
 
   let current = 0;
+  let broken = false;
   for (let i = scheduledDays.length - 1; i >= 0; i -= 1) {
     const day = scheduledDays[i];
     if (done(day)) current += 1;
-    else if (day !== today) break;
+    else if (day !== today) {
+      broken = true;
+      break;
+    }
   }
 
   let best = 0;
@@ -158,9 +164,11 @@ export function habitSummary(habit: HabitLite, index: CheckInIndex, from: DateSt
   return {
     habit,
     currentStreak: current,
+    // Never missed since `from`, and the habit is older than that: the real streak may be longer.
+    streakCapped: !broken && current > 0 && habit.createdDay < from,
     bestStreak: best,
     rate30: last30.length ? Math.round((last30Done / last30.length) * 100) : null,
-    recent: scheduledDays.filter((day) => day >= recentFrom).map((day) => ({ date: day, done: done(day) })),
+    recent: dayRange(recentFrom, today).map((day) => ({ date: day, scheduled: isScheduledOn(habit, day), done: done(day) })),
   };
 }
 

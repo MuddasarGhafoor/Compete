@@ -12,10 +12,9 @@ import { ComparisonChart } from "@/components/charts/comparison-chart";
 import { HabitIcon } from "@/components/habit-icon";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getViewer, loadUserActivity } from "@/lib/data/core";
-import { areFriends, getStandings } from "@/lib/data/social";
+import { friendsFrom, getProfile, personWeek } from "@/lib/data/social";
 import { addDays, dayIn, dayRange, describeSchedule, formatDay, safeTimeZone, startOfWeek } from "@/lib/dates";
 import { formatPercent, plural } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
 import { dailyStats, indexCheckIns, isScheduledOn, valueOn } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 
@@ -34,11 +33,15 @@ export default function FriendProfilePage(props: PageProps<"/friends/[username]"
 async function FriendProfile({ params }: { params: PageProps<"/friends/[username]">["params"] }) {
   const viewer = await getViewer();
   const { username } = await params;
-  const person = await prisma.user.findUnique({
-    where: { username: decodeURIComponent(username).toLowerCase() },
-    select: { id: true, name: true, username: true, timezone: true },
-  });
-  if (!person) notFound();
+  const weekStart = startOfWeek(viewer.today);
+  const from = friendsFrom(viewer.today);
+  // Their profile + activity and your own activity, in one parallel wave.
+  const [profile, ownActivity] = await Promise.all([
+    getProfile(viewer, decodeURIComponent(username).toLowerCase(), from),
+    loadUserActivity(viewer.id, viewer.tz, from),
+  ]);
+  if (!profile) notFound();
+  const { person, activity } = profile;
   if (person.id === viewer.id) redirect("/progress");
 
   const back = (
@@ -48,7 +51,7 @@ async function FriendProfile({ params }: { params: PageProps<"/friends/[username
     </Link>
   );
 
-  if (!(await areFriends(viewer.id, person.id))) {
+  if (!profile.isFriend) {
     return (
       <div className="space-y-6">
         {back}
@@ -69,16 +72,14 @@ async function FriendProfile({ params }: { params: PageProps<"/friends/[username
     );
   }
 
-  const theirTz = safeTimeZone(person.timezone);
-  const theirToday = dayIn(theirTz);
-  const weekStart = startOfWeek(viewer.today);
-  const from = addDays(theirToday, -30);
-  const [standings, activity] = await Promise.all([
-    getStandings(viewer, weekStart, [person.id]),
-    loadUserActivity(person.id, theirTz, from, theirToday),
-  ]);
-  const me = standings.find((entry) => entry.person.isYou);
-  const them = standings.find((entry) => entry.person.id === person.id);
+  const theirToday = dayIn(safeTimeZone(person.timezone));
+  const me = personWeek(
+    { id: viewer.id, name: viewer.name, username: viewer.username, timezone: viewer.tz, isYou: true },
+    ownActivity,
+    from,
+    weekStart,
+  );
+  const them = personWeek({ ...person, isYou: false }, activity, from, weekStart);
 
   const index = indexCheckIns(activity.checkIns);
   const days = dailyStats(activity.habits, index, from, theirToday);
@@ -119,7 +120,7 @@ async function FriendProfile({ params }: { params: PageProps<"/friends/[username
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard icon={Target} label="Today" value={formatPercent(byDate.get(theirToday) ?? null)} tone="primary" />
         <StatCard icon={Flame} label="Current streak" value={plural(them?.streak ?? 0, "day")} tone="warm" />
         <StatCard icon={Trophy} label="This week" value={formatPercent(them?.score)} hint={`You: ${formatPercent(me?.score)}`} />

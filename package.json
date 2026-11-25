@@ -10,7 +10,8 @@
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\""
+    "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -21,6 +22,7 @@
     "better-auth": "^1.7.27",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
+    "input-otp": "^1.5.0",
     "lucide-react": "^1.78.0",
     "motion": "^14.14.0",
     "next": "16.4.6",
@@ -41,6 +43,7 @@
     "eslint-config-next": "16.4.6",
     "prisma": "7.10.1",
     "tailwindcss": "4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   },
   "packageManager": "pnpm@12.21.0"

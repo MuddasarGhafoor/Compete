@@ -19,6 +19,7 @@ import { Section, SectionHeading } from "@/components/section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { buttonVariants } from "@/components/ui/button";
+import { OpenAppButton } from "@/components/user-menu";
 import { getCurrentUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
@@ -208,12 +209,10 @@ async function PrimaryCtas() {
   const user = await getCurrentUser();
   if (!user) return <GuestCtas />;
 
+  // Asks for the PIN first when the app is locked.
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <Link href="/today" className={cn(buttonVariants({ size: "lg" }), "h-11 px-5")}>
-        Continue as {user.name}
-        <ArrowRight data-icon="inline-end" />
-      </Link>
+      <OpenAppButton locked={user.locked} label={`Continue as ${user.name.split(" ")[0]}`} className="h-11 px-5" />
     </div>
   );
 }

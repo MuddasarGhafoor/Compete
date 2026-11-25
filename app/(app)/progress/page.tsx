@@ -67,9 +67,9 @@ async function ProgressContent({ searchParams }: { searchParams: PageProps<"/pro
   const range = rangeParam === "7" ? 7 : 30;
 
   const thisWeek = startOfWeek(viewer.today);
-  const from = addDays(thisWeek, -7 * 51); // a year of whole weeks
+  const from = addDays(thisWeek, -7 * 25); // 26 whole weeks (matches the heatmap)
   const [activity, challenges] = await Promise.all([
-    loadUserActivity(viewer.id, viewer.tz, from, viewer.today),
+    loadUserActivity(viewer.id, viewer.tz, from),
     getChallenges(viewer),
   ]);
 
@@ -132,11 +132,11 @@ async function ProgressContent({ searchParams }: { searchParams: PageProps<"/pro
     <div className="space-y-8">
       <PageHeader title="Progress" description="How consistent you've been, day by day and week by week." />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
         <StatCard icon={Flame} label="Current streak" value={plural(currentStreak(days, viewer.today), "day")} tone="warm" />
-        <StatCard icon={Trophy} label="Best streak" value={plural(best, "day")} hint="In the last year" />
+        <StatCard icon={Trophy} label="Best streak" value={plural(best, "day")} hint="Last 6 months" />
         <StatCard icon={Target} label="This week" value={formatPercent(weekScore(days, thisWeek, viewer.today))} hint={`Last 30 days: ${formatPercent(last30)}`} tone="primary" />
-        <StatCard icon={CircleCheckBig} label="Habits completed" value={totalDone.toLocaleString("en-US")} hint="In the last year" />
+        <StatCard icon={CircleCheckBig} label="Habits completed" value={totalDone.toLocaleString("en-US")} hint="Last 6 months" />
       </div>
 
       <Card>

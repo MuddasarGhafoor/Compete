@@ -144,7 +144,7 @@ export function TimezoneForm({ timezone, zones }: { timezone: string | null; zon
             onClick={() => setValue(Intl.DateTimeFormat().resolvedOptions().timeZone)}
           >
             <LocateFixed data-icon="inline-start" />
-            Use this device&apos;s
+            Detect from this device
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">Decides when your day starts and ends, so check-ins land on the right date.</p>

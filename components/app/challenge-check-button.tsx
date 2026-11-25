@@ -12,11 +12,20 @@ type ChallengeCheckButtonProps = {
   day: string;
   done: boolean;
   label?: string;
+  /** Shown once checked in (says which day when there are two buttons) */
+  doneLabel?: string;
   size?: "sm" | "lg";
 };
 
 /** "Check in" / "Done" toggle for a challenge day. */
-export function ChallengeCheckButton({ challengeId, day, done, label = "Check in", size = "sm" }: ChallengeCheckButtonProps) {
+export function ChallengeCheckButton({
+  challengeId,
+  day,
+  done,
+  label = "Check in",
+  doneLabel = "Done",
+  size = "sm",
+}: ChallengeCheckButtonProps) {
   const [, startTransition] = useTransition();
   const [isDone, setDone] = useOptimistic(done);
 
@@ -36,7 +45,7 @@ export function ChallengeCheckButton({ challengeId, day, done, label = "Check in
       className={cn("shrink-0", size === "lg" && "h-10 px-4")}
     >
       {isDone && <Check data-icon="inline-start" />}
-      {isDone ? "Done" : label}
+      {isDone ? doneLabel : label}
     </Button>
   );
 }

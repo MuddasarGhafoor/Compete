@@ -75,7 +75,7 @@ async function ChallengeContent({ params }: { params: PageProps<"/challenges/[id
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard
           icon={CalendarDays}
           label="Progress"
@@ -108,9 +108,9 @@ async function ChallengeContent({ params }: { params: PageProps<"/challenges/[id
             </div>
             <div className="flex gap-2">
               {yesterday >= challenge.startDate && (
-                <ChallengeCheckButton challengeId={challenge.id} day={yesterday} done={challenge.doneYesterday} label="Yesterday" size="lg" />
+                <ChallengeCheckButton challengeId={challenge.id} day={yesterday} done={challenge.doneYesterday} label="Log yesterday" doneLabel="Yesterday done" size="lg" />
               )}
-              <ChallengeCheckButton challengeId={challenge.id} day={viewer.today} done={challenge.doneToday} label="Check in today" size="lg" />
+              <ChallengeCheckButton challengeId={challenge.id} day={viewer.today} done={challenge.doneToday} label="Check in today" doneLabel="Done today" size="lg" />
             </div>
           </CardContent>
         </Card>

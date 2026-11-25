@@ -10,8 +10,8 @@ import { SegmentedLinks } from "@/components/app/segmented-links";
 import { ComparisonChart } from "@/components/charts/comparison-chart";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getViewer } from "@/lib/data/core";
-import { getStandings } from "@/lib/data/social";
+import { getViewer, loadUserActivity } from "@/lib/data/core";
+import { buildStandings, friendsFrom, getSocial } from "@/lib/data/social";
 import { addDays, formatDay, startOfWeek, weekdayIndex } from "@/lib/dates";
 import { formatPercent, plural } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -34,7 +34,11 @@ async function LeaderboardContent({ searchParams }: { searchParams: PageProps<"/
   const isLastWeek = week === "last";
   const thisWeek = startOfWeek(viewer.today);
   const weekStart = isLastWeek ? addDays(thisWeek, -7) : thisWeek;
-  const standings = await getStandings(viewer, weekStart);
+  // Both weeks plus enough history for streaks, loaded in one parallel wave.
+  const from = addDays(viewer.today, -60);
+  const socialFrom = friendsFrom(viewer.today);
+  const [activity, social] = await Promise.all([loadUserActivity(viewer.id, viewer.tz, from), getSocial(viewer, socialFrom)]);
+  const standings = buildStandings(viewer, activity, from, social.friends, socialFrom, weekStart);
 
   const daysLeft = 7 - weekdayIndex(viewer.today);
   const range = `${formatDay(weekStart, { month: "short", day: "numeric" })} – ${formatDay(addDays(weekStart, 6), {
@@ -144,10 +148,10 @@ async function LeaderboardContent({ searchParams }: { searchParams: PageProps<"/
                         "inline-flex items-center gap-0.5 text-xs font-medium tabular-nums",
                         change > 0 ? "text-primary" : change < 0 ? "text-destructive" : "text-muted-foreground",
                       )}
-                      title="Change from the week before"
+                      title={change === 0 ? "Same as the week before" : "Points of change from the week before"}
                     >
                       {change > 0 ? <ArrowUp className="size-3" /> : change < 0 ? <ArrowDown className="size-3" /> : <Minus className="size-3" />}
-                      {Math.abs(change)}
+                      {change === 0 ? "Same" : Math.abs(change)}
                     </span>
                   )}
                 </div>

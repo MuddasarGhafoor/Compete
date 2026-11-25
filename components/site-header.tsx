@@ -6,7 +6,7 @@ import { FaqLink } from "@/components/faq-link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
-import { UserMenu } from "@/components/user-menu";
+import { HomeAccountMenu } from "@/components/user-menu";
 import { getCurrentUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
@@ -35,18 +35,8 @@ export function SiteHeader() {
 async function AccountActions() {
   const user = await getCurrentUser();
   if (!user) return <GuestActions />;
-
-  return (
-    <>
-      <Link
-        href="/today"
-        className={cn(buttonVariants({ size: "lg" }), "ml-1.5 hidden sm:inline-flex")}
-      >
-        Open app
-      </Link>
-      <UserMenu user={user} />
-    </>
-  );
+  // Avatar menu: Open app (asks for the PIN when locked) and Sign out (with confirmation).
+  return <HomeAccountMenu user={user} />;
 }
 
 function GuestActions() {

@@ -9,6 +9,7 @@ import { getViewer } from "@/lib/data/core";
 import { safeTimeZone } from "@/lib/dates";
 import { endDevLogin } from "@/lib/dev-auth"; // dev-login
 import { prisma } from "@/lib/prisma";
+import { refreshSessionData } from "@/lib/session";
 import { fail, normalizeUsername, ok, usernameError, type ActionResult } from "@/lib/validation";
 
 export async function updateProfile(input: { name: string; username: string }): Promise<ActionResult> {
@@ -24,6 +25,7 @@ export async function updateProfile(input: { name: string; username: string }): 
   if (taken) return fail("That username is taken. Try another.");
 
   await prisma.user.update({ where: { id: viewer.id }, data: { name, username } });
+  await refreshSessionData(viewer.id);
   refresh();
   return ok("Profile saved");
 }
@@ -38,6 +40,7 @@ export async function setTimezone(timeZone: string, onlyIfUnset = false): Promis
   if (onlyIfUnset && viewer.timezone) return ok();
 
   await prisma.user.update({ where: { id: viewer.id }, data: { timezone: timeZone } });
+  await refreshSessionData(viewer.id);
   refresh();
   return ok("Timezone saved");
 }

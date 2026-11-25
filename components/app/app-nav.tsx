@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
+import { Loader2 } from "lucide-react";
 import { MotionProvider } from "@/components/motion";
 import { cn } from "@/lib/utils";
 import { appNavItems, tabBarItems } from "./nav-items";
@@ -12,6 +13,12 @@ import { appNavItems, tabBarItems } from "./nav-items";
  * inside <Suspense>. The parents render `pathname={null}` versions as the fallback (same layout,
  * no active highlight), then the live versions stream in.
  */
+
+/** Spinner shown on a link while its page is loading (instant feedback on click). */
+function PendingSpinner({ className }: { className?: string }) {
+  const { pending } = useLinkStatus();
+  return pending ? <Loader2 aria-hidden className={cn("size-3.5 animate-spin text-muted-foreground", className)} /> : null;
+}
 
 function isActive(pathname: string | null, href: string) {
   return pathname !== null && (pathname === href || pathname.startsWith(`${href}/`));
@@ -47,6 +54,7 @@ function SidebarLinks({ pathname }: { pathname: string | null }) {
                   Soon
                 </span>
               )}
+              <PendingSpinner className="relative ml-auto" />
             </Link>
           );
         })}
@@ -75,6 +83,7 @@ function TabBarLinks({ pathname }: { pathname: string | null }) {
                 )}
               >
                 {active && <span aria-hidden className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-primary" />}
+                <PendingSpinner className="absolute top-1.5 right-3" />
                 <Icon className="size-5" />
                 {label}
               </Link>

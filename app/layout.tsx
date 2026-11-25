@@ -51,7 +51,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="isolate flex min-h-dvh flex-col">
           <TooltipProvider>{children}</TooltipProvider>
         </div>
-        <Toaster position="bottom-right" />
+        {/* On phones, toasts sit above the app's bottom tab bar. */}
+        <Toaster position="bottom-right" mobileOffset={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }} />
       </body>
     </html>
   );

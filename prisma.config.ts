@@ -5,6 +5,8 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // `pnpm db:seed`: test users and data for development (see prisma/seed.ts)
+    seed: "tsx prisma/seed.ts",
   },
   datasource: {
     // Prisma CLI (migrations) uses Neon's direct, non-pooled connection.

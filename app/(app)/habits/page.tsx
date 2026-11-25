@@ -28,8 +28,8 @@ export default function HabitsPage() {
 
 async function HabitsContent() {
   const viewer = await getViewer();
-  const from = addDays(viewer.today, -120);
-  const activity = await loadUserActivity(viewer.id, viewer.tz, from, viewer.today);
+  const from = addDays(viewer.today, -60);
+  const activity = await loadUserActivity(viewer.id, viewer.tz, from);
   const index = indexCheckIns(activity.checkIns);
   const summaries = activity.habits.map((habit) => habitSummary(habit, index, from, viewer.today));
   const active = summaries.filter((summary) => !summary.habit.archivedDay);
@@ -133,24 +133,34 @@ function HabitRow({
         </p>
       </div>
 
-      {/* Last 14 scheduled days */}
-      <div className="hidden items-center gap-1 md:flex" aria-label="Recent days">
-        {summary.recent.map((day) => (
-          <span
-            key={day.date}
-            title={`${formatDay(day.date, { weekday: "short", month: "short", day: "numeric" })}: ${day.done ? "done" : day.date === today ? "not yet" : "missed"}`}
-            className={cn(
-              "size-2.5 rounded-full",
-              day.done ? "bg-primary" : day.date === today ? "border border-primary/50" : "bg-muted-foreground/20",
-            )}
-          />
-        ))}
+      {/* Last 14 days (one column per day, so the rows line up). Not for archived habits. */}
+      <div className={cn("hidden items-center gap-1", !archived && "md:flex")} aria-label="Last 14 days">
+        {summary.recent.map((day) => {
+          const label = formatDay(day.date, { weekday: "short", month: "short", day: "numeric" });
+          if (!day.scheduled) {
+            return (
+              <span key={day.date} title={`${label}: not scheduled`} className="grid size-2.5 place-items-center">
+                <span className="size-1 rounded-full bg-muted-foreground/25" />
+              </span>
+            );
+          }
+          return (
+            <span
+              key={day.date}
+              title={`${label}: ${day.done ? "done" : day.date === today ? "not yet" : "missed"}`}
+              className={cn(
+                "size-2.5 rounded-full",
+                day.done ? "bg-primary" : day.date === today ? "border border-primary/50" : "bg-muted-foreground/20",
+              )}
+            />
+          );
+        })}
       </div>
 
       <div className="hidden w-28 shrink-0 text-right sm:block">
         <p className="flex items-center justify-end gap-1 text-sm font-medium tabular-nums">
           <Flame className="size-3.5 text-warm" />
-          {plural(summary.currentStreak, "day")}
+          {summary.streakCapped ? `${summary.currentStreak}+ days` : plural(summary.currentStreak, "day")}
         </p>
         <p className="text-xs text-muted-foreground tabular-nums">{formatPercent(summary.rate30)} last 30 days</p>
       </div>

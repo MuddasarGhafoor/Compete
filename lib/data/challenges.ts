@@ -35,18 +35,61 @@ export type ChallengeView = {
   allDays: DateStr[];
 };
 
-const include = {
-  creator: { select: { name: true } },
-  participants: {
-    include: { user: { select: { id: true, name: true, username: true, timezone: true } } },
-    orderBy: { createdAt: "asc" as const },
-  },
-  checkIns: { select: { userId: true, date: true } },
+type ChallengeRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  icon: string;
+  startDate: Date;
+  endDate: Date;
+  creatorId: string;
+  creatorName: string;
 };
+type ParticipantRow = PersonRef & { challengeId: string; status: "INVITED" | "JOINED" };
+type ChallengeCheckInRow = { challengeId: string; userId: string; date: Date };
 
-type ChallengeRow = Awaited<ReturnType<typeof prisma.challenge.findFirst<{ include: typeof include }>>>;
+/**
+ * Challenges the viewer is in (optionally just one), loaded with three small queries in
+ * parallel: challenges, participants and check-ins.
+ */
+async function loadChallenges(viewer: Viewer, onlyId?: string): Promise<ChallengeView[]> {
+  const me = viewer.id;
+  const id = onlyId ?? null;
+  const [challenges, participants, checkIns] = await Promise.all([
+    prisma.$queryRaw<ChallengeRow[]>`
+      select c.id, c.title, c.description, c.icon, c."startDate", c."endDate", c."creatorId", u.name as "creatorName"
+      from challenge c join "user" u on u.id = c."creatorId"
+      where c.id in (select "challengeId" from challenge_participant where "userId" = ${me})
+        and (${id}::text is null or c.id = ${id})
+      order by c."startDate" desc`,
+    prisma.$queryRaw<ParticipantRow[]>`
+      select p."challengeId", p.status, u.id, u.name, u.username, u.timezone
+      from challenge_participant p join "user" u on u.id = p."userId"
+      where p."challengeId" in (select "challengeId" from challenge_participant where "userId" = ${me})
+        and (${id}::text is null or p."challengeId" = ${id})
+      order by p."createdAt"`,
+    prisma.$queryRaw<ChallengeCheckInRow[]>`
+      select "challengeId", "userId", date from challenge_check_in
+      where "challengeId" in (select "challengeId" from challenge_participant where "userId" = ${me})
+        and (${id}::text is null or "challengeId" = ${id})`,
+  ]);
 
-function toView(row: NonNullable<ChallengeRow>, viewer: Viewer): ChallengeView {
+  return challenges.map((row) =>
+    toView(
+      row,
+      participants.filter((participant) => participant.challengeId === row.id),
+      checkIns.filter((checkIn) => checkIn.challengeId === row.id),
+      viewer,
+    ),
+  );
+}
+
+function toView(
+  row: ChallengeRow,
+  participantRows: ParticipantRow[],
+  checkInRows: ChallengeCheckInRow[],
+  viewer: Viewer,
+): ChallengeView {
   const startDate = fromDbDate(row.startDate);
   const endDate = fromDbDate(row.endDate);
   const today = viewer.today;
@@ -56,19 +99,19 @@ function toView(row: NonNullable<ChallengeRow>, viewer: Viewer): ChallengeView {
     status === "upcoming" ? 0 : status === "finished" ? totalDays : daysBetween(startDate, today) + 1;
 
   const daysByUser = new Map<string, Set<DateStr>>();
-  for (const checkIn of row.checkIns) {
+  for (const checkIn of checkInRows) {
     const set = daysByUser.get(checkIn.userId) ?? new Set<DateStr>();
     set.add(fromDbDate(checkIn.date));
     daysByUser.set(checkIn.userId, set);
   }
 
-  const participants: ChallengeParticipantView[] = row.participants
+  const participants: ChallengeParticipantView[] = participantRows
     .map((participant) => {
-      const days = daysByUser.get(participant.userId) ?? new Set<DateStr>();
+      const days = daysByUser.get(participant.id) ?? new Set<DateStr>();
       return {
-        person: participant.user,
+        person: { id: participant.id, name: participant.name, username: participant.username, timezone: participant.timezone },
         status: participant.status,
-        isYou: participant.userId === viewer.id,
+        isYou: participant.id === viewer.id,
         done: days.size,
         days,
       };
@@ -84,7 +127,7 @@ function toView(row: NonNullable<ChallengeRow>, viewer: Viewer): ChallengeView {
     startDate,
     endDate,
     creatorId: row.creatorId,
-    creatorName: row.creator.name,
+    creatorName: row.creatorName,
     status,
     totalDays,
     elapsedDays,
@@ -97,22 +140,14 @@ function toView(row: NonNullable<ChallengeRow>, viewer: Viewer): ChallengeView {
 }
 
 /** Every challenge the viewer is in or invited to. */
-export async function getChallenges(viewer: Viewer): Promise<ChallengeView[]> {
-  const rows = await prisma.challenge.findMany({
-    where: { participants: { some: { userId: viewer.id } } },
-    include,
-    orderBy: { startDate: "desc" },
-  });
-  return rows.map((row) => toView(row, viewer));
+export function getChallenges(viewer: Viewer): Promise<ChallengeView[]> {
+  return loadChallenges(viewer);
 }
 
 /** One challenge, only if the viewer is a participant or invited. */
 export async function getChallenge(viewer: Viewer, id: string): Promise<ChallengeView | null> {
-  const row = await prisma.challenge.findFirst({
-    where: { id, participants: { some: { userId: viewer.id } } },
-    include,
-  });
-  return row ? toView(row, viewer) : null;
+  const [challenge] = await loadChallenges(viewer, id);
+  return challenge ?? null;
 }
 
 /** Finished challenges where the viewer checked in on at least 80% of the days. */

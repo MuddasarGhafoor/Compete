@@ -10,17 +10,28 @@ function createPrismaClient() {
     "sslmode=require",
     "sslmode=verify-full",
   );
-  const adapter = new PrismaPg({ connectionString });
+  const adapter = new PrismaPg({
+    connectionString,
+    // Opening a connection costs several round trips (TLS + auth), which is slow when the
+    // database is far away. Keep idle connections for 10 minutes instead of pg's 10 seconds.
+    idleTimeoutMillis: 10 * 60 * 1000,
+    keepAlive: true,
+    max: 10,
+  });
   return new PrismaClient({ adapter });
 }
 
 // Reuse one client during development so hot reloads don't open new connections.
+// After `prisma generate` the PrismaClient class changes, so a stale cached client is replaced
+// automatically (no dev server restart needed after schema changes).
 const globalForPrisma = globalThis as unknown as {
-  prisma?: ReturnType<typeof createPrismaClient>;
+  prismaCache?: { client: ReturnType<typeof createPrismaClient>; ctor: typeof PrismaClient };
 };
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+const cached = globalForPrisma.prismaCache;
+export const prisma = cached && cached.ctor === PrismaClient ? cached.client : createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  if (cached && cached.client !== prisma) void cached.client.$disconnect().catch(() => {});
+  globalForPrisma.prismaCache = { client: prisma, ctor: PrismaClient };
 }

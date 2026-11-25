@@ -19,7 +19,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getViewer } from "@/lib/data/core";
-import { getFriendships, getStandings, searchPeople } from "@/lib/data/social";
+import { friendsFrom, getSocial, personWeek, searchPeople } from "@/lib/data/social";
 import { startOfWeek, timeAgo } from "@/lib/dates";
 import { formatPercent, plural } from "@/lib/format";
 
@@ -40,12 +40,15 @@ async function FriendsContent({ searchParams }: { searchParams: PageProps<"/frie
   const { q } = await searchParams;
   const query = typeof q === "string" ? q.trim() : "";
 
-  const [{ friends, incoming, outgoing }, standings, results] = await Promise.all([
-    getFriendships(viewer.id),
-    getStandings(viewer, startOfWeek(viewer.today)),
+  const weekStart = startOfWeek(viewer.today);
+  const from = friendsFrom(viewer.today);
+  const [{ friends, incoming, outgoing }, results] = await Promise.all([
+    getSocial(viewer, from),
     query ? searchPeople(viewer.id, query) : Promise.resolve([]),
   ]);
-  const statsById = new Map(standings.map((entry) => [entry.person.id, entry]));
+  const statsById = new Map(
+    friends.map((friend) => [friend.id, personWeek({ ...friend, isYou: false }, friend.activity, from, weekStart)]),
+  );
 
   return (
     <div className="space-y-8">
