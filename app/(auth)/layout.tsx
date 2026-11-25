@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { TodayPreview } from "@/components/marketing-previews";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 /*
  * No site navbar here: just the logo and a "Back to home" link.
@@ -50,7 +51,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* Right column: the form */}
       <main className="flex bg-background lg:overflow-y-auto">
         <div className="mx-auto flex w-full max-w-160 flex-col px-4 sm:px-6 lg:mr-auto lg:ml-0 lg:pr-8 lg:pl-16 xl:pl-24">
-          <div className="flex h-16 shrink-0 items-center">
+          <div className="flex h-16 shrink-0 items-center justify-between">
             <Link
               href="/"
               className="-ml-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -58,6 +59,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <ArrowLeft className="size-4" />
               Back to home
             </Link>
+            <ThemeToggle />
           </div>
 
           <div className="flex flex-1 items-center justify-center py-6 lg:justify-start">

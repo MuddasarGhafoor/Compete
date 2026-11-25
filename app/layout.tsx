@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist, Geist_Mono } from "next/font/google";
+import { ThemeWatcher } from "@/components/theme-watcher";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,9 +36,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
+      // The theme script below adds `.dark` before React loads, so the class differs from the server HTML.
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
+      <head>
+        {/* Applies the saved light/dark theme before the first paint (no flash). */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full font-sans">
+        <ThemeWatcher />
         {/* `isolate` keeps popups (menus, selects, tooltips) stacking above the page. */}
         <div className="isolate flex min-h-dvh flex-col">
           <TooltipProvider>{children}</TooltipProvider>

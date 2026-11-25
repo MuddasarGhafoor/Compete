@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Wrench } from "lucide-react";
 import { Container } from "@/components/container";
 import { FaqLink } from "@/components/faq-link";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { UserMenu } from "@/components/user-menu";
@@ -28,6 +29,7 @@ async function HeaderAccount() {
 
   return (
     <div className="flex items-center gap-1.5">
+      <ThemeToggle />
       <FaqLink />
       {user.isDevUser && (
         <Badge variant="outline" className="gap-1 text-amber-700 dark:text-amber-400">

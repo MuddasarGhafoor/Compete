@@ -4,6 +4,7 @@ import { Container } from "@/components/container";
 import { DevLoginButton } from "@/components/dev-login-button"; // dev-login
 import { FaqLink } from "@/components/faq-link";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
 import { getCurrentUser } from "@/lib/session";
@@ -11,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Top bar for public pages.
- * Right side: FAQ icon, then "Get started" (opens sign-in) or the account menu when signed in.
+ * Right side: theme toggle, FAQ icon, then "Get started" (opens sign-in) or the account menu.
  */
 export function SiteHeader() {
   return (
@@ -19,6 +20,7 @@ export function SiteHeader() {
       <Container className="flex h-16 items-center justify-between gap-4">
         <Logo />
         <div className="flex items-center gap-1.5">
+          <ThemeToggle />
           <FaqLink />
           {/* Reads the session, so it streams in behind a Suspense boundary. */}
           <Suspense fallback={<GuestActions />}>
