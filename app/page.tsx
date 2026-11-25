@@ -171,12 +171,6 @@ export default function Home() {
               <p className="mt-3 text-muted-foreground">
                 Set up your first habits in a minute, then invite a friend whenever you like.
               </p>
-              <p className="mt-4 text-sm text-muted-foreground">
-                Have a question first?{" "}
-                <Link href="/faq" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
-                  Read the FAQ
-                </Link>
-              </p>
             </div>
             <Suspense fallback={<GuestCtas />}>
               <PrimaryCtas />
@@ -207,15 +201,15 @@ async function PrimaryCtas() {
 function GuestCtas() {
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <Link href="/sign-up" className={cn(buttonVariants({ size: "lg" }), "h-11 px-5")}>
+      <Link href="/sign-in" className={cn(buttonVariants({ size: "lg" }), "h-11 px-5")}>
         Get started
         <ArrowRight data-icon="inline-end" />
       </Link>
       <Link
-        href="/sign-in"
+        href="/faq"
         className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11 px-5")}
       >
-        Sign in
+        Read the FAQ
       </Link>
     </div>
   );

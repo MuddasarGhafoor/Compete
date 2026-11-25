@@ -15,8 +15,8 @@ type AuthFormProps = {
 
 const copy = {
   "sign-in": {
-    title: "Welcome back",
-    subtitle: "Sign in to check off today's habits.",
+    title: "Sign in to Compete",
+    subtitle: "Pick up where you left off. New here? You can create an account below.",
     submit: "Sign in",
     pending: "Signing in…",
     switchText: "New to Compete?",

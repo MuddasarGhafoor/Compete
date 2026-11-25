@@ -39,6 +39,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
   --color-warm: var(--warm);
+  --color-panel: var(--panel);
+  --color-panel-foreground: var(--panel-foreground);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -67,6 +69,9 @@
   --primary-foreground: oklch(0.985 0.004 85);
   /* Warm ochre: second brand color (logo, streaks, first place) */
   --warm: oklch(0.72 0.12 68);
+  /* Deep, muted forest: brand panel (auth pages' left column) */
+  --panel: oklch(0.3 0.035 158);
+  --panel-foreground: oklch(0.96 0.008 120);
   --secondary: oklch(0.952 0.006 85);
   --secondary-foreground: oklch(0.24 0.012 60);
   --muted: oklch(0.952 0.006 85);
@@ -106,6 +111,8 @@
     --primary: oklch(0.76 0.08 158);
     --primary-foreground: oklch(0.2 0.02 158);
     --warm: oklch(0.78 0.11 70);
+    --panel: oklch(0.25 0.03 158);
+    --panel-foreground: oklch(0.95 0.008 120);
     --secondary: oklch(0.25 0.007 60);
     --secondary-foreground: oklch(0.94 0.006 85);
     --muted: oklch(0.25 0.007 60);
@@ -131,6 +138,40 @@
     --sidebar-ring: oklch(0.6 0.07 158);
     --scrollbar-thumb: oklch(0.7 0.01 75 / 25%);
     --scrollbar-thumb-hover: oklch(0.7 0.01 75 / 45%);
+  }
+}
+
+/* Hide a scrollbar but keep scrolling (e.g. horizontal chip rows). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
+ * Scroll reveal: fades and lifts an element in as it scrolls into view.
+ * CSS-only (scroll-driven animations), so content is never hidden if it's unsupported
+ * or if the visitor prefers reduced motion.
+ */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
   }
 }
 
